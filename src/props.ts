@@ -190,16 +190,9 @@ export function renderMinecraftGround(
       <rect x="0" y="${groundY}" width="${width}" height="3" fill="${grassHighlight}" />
       <rect x="0" y="${groundY + grassHeight - 3}" width="${width}" height="3" fill="${grassShadow}" />
       
-      <!-- Grass Tufts/Blades -->
-      <rect x="24" y="${groundY - 3}" width="4" height="3" fill="${grassHighlight}" />
-      <rect x="28" y="${groundY - 5}" width="3" height="5" fill="${grassColor}" />
-      <rect x="85" y="${groundY - 4}" width="3" height="4" fill="${grassHighlight}" />
-      <rect x="145" y="${groundY - 3}" width="4" height="3" fill="${grassColor}" />
-      <rect x="149" y="${groundY - 6}" width="3" height="6" fill="${grassHighlight}" />
-      <rect x="210" y="${groundY - 4}" width="3" height="4" fill="${grassHighlight}" />
-      <rect x="270" y="${groundY - 5}" width="4" height="5" fill="${grassColor}" />
-      <rect x="330" y="${groundY - 3}" width="3" height="3" fill="${grassHighlight}" />
-      <rect x="390" y="${groundY - 5}" width="4" height="5" fill="${grassHighlight}" />
+      <!-- Grass Tufts/Blades in open lawn areas -->
+      <rect x="20" y="${groundY - 3}" width="4" height="3" fill="${grassHighlight}" />
+      <rect x="360" y="${groundY - 3}" width="3" height="3" fill="${grassHighlight}" />
       <rect x="435" y="${groundY - 4}" width="3" height="4" fill="${grassColor}" />
     </g>
   `;
