@@ -111,6 +111,44 @@ describe("Minecraft tree module", () => {
       expect(cappedLayout.goldenApples.length).toBeLessThanOrEqual(4);
     });
 
+    it("distributes flowers and golden apples smoothly without collisions or clumping", () => {
+      for (let open = 0; open <= 4; open++) {
+        for (let assigned = 0; assigned <= 4; assigned++) {
+          const weeks: ContributionWeek[] = [
+            {
+              days: [{ date: "2026-08-01", count: 10 }],
+              total: 25,
+              openPRs: open,
+              mergedPRs: 2,
+              assignedPRs: assigned,
+            },
+          ];
+          const layout = buildTreeLayout(weeks);
+          const allItems = [
+            ...layout.flowers.map((f) => ({ x: f.x, side: f.side, kind: "flower" })),
+            ...layout.goldenApples.map((g) => ({ x: g.x, side: g.side, kind: "goldenApple" })),
+          ].sort((a, b) => a.x - b.x);
+
+          expect(allItems.length).toBe(open + assigned);
+
+          // Verify all items are within canvas bounds
+          for (const item of allItems) {
+            expect(item.x).toBeGreaterThanOrEqual(16);
+            expect(item.x).toBeLessThanOrEqual(layout.width - 16);
+          }
+
+          // Verify no two items are too close together
+          for (let i = 1; i < allItems.length; i++) {
+            const dist = allItems[i].x - allItems[i - 1].x;
+            // Items on different sides of trunk can have trunk distance; on the same side, at least 14px apart
+            if (allItems[i].side === allItems[i - 1].side) {
+              expect(dist).toBeGreaterThanOrEqual(14);
+            }
+          }
+        }
+      }
+    });
+
     it("generates signpost, beehive, bee, and ore blocks based on activity and options", () => {
       const activeWeeks: ContributionWeek[] = [
         {

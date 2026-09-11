@@ -451,7 +451,7 @@ export function buildTreeLayout(
     (showCampfireOpt === "auto" && (recent2WeeksCommits >= 12 || currentStreak >= 10 || totalCommits >= 60));
 
   if (shouldShowCampfire) {
-    const campfireX = farmer && chest ? 356 : farmer || chest ? 346 : 310;
+    const campfireX = farmer && chest ? 372 : farmer || chest ? 346 : 310;
     campfire = { x: campfireX, y: groundY - 16 };
   }
 
@@ -486,84 +486,217 @@ export function buildTreeLayout(
     ];
   }
 
-  // 13. Dynamic Non-Overlapping Flower Placement 🌸
-  const occupiedRanges: [number, number][] = [];
-  if (signpost) occupiedRanges.push([38, 104]); // Protects signpost area and ensures only one clean far-left slot at x: 18
-  if (jackOLantern) occupiedRanges.push([jackOLantern.x - 14, jackOLantern.x + 20]);
-  if (pet) occupiedRanges.push([pet.x - 14, pet.x + 20]);
-  if (farmer) occupiedRanges.push([farmer.x - 14, farmer.x + 20]);
-  if (chest) occupiedRanges.push([chest.x - 14, chest.x + 20]);
-  if (holidayGifts) {
-    for (const g of holidayGifts) {
-      occupiedRanges.push([g.x - 8, g.x + g.size + 8]);
+  // 13. Dynamic Non-Overlapping & Proportional Lawn Placement (Flowers 🌸 & Golden Apples 🍏✨)
+  const leftObstacles: [number, number][] = [];
+  const rightObstacles: [number, number][] = [];
+
+  if (signpost) leftObstacles.push([signpost.x - 12, signpost.x + 52]); // signpost x: 62..108
+  if (pet) leftObstacles.push([pet.x - 14, pet.x + 22]);
+  if (farmer) rightObstacles.push([farmer.x - 18, farmer.x + 22]);
+  if (chest) rightObstacles.push([chest.x - 10, chest.x + 24]);
+  if (campfire) rightObstacles.push([campfire.x - 12, campfire.x + 24]);
+  if (jackOLantern) {
+    if (jackOLantern.x < trunkX) {
+      leftObstacles.push([jackOLantern.x - 12, jackOLantern.x + 22]);
+    } else {
+      rightObstacles.push([jackOLantern.x - 12, jackOLantern.x + 22]);
     }
   }
-  if (campfire) occupiedRanges.push([campfire.x - 14, campfire.x + 22]);
+  if (holidayGifts) {
+    for (const g of holidayGifts) {
+      if (g.x < trunkX) {
+        leftObstacles.push([g.x - 8, g.x + g.size + 8]);
+      } else {
+        rightObstacles.push([g.x - 8, g.x + g.size + 8]);
+      }
+    }
+  }
 
-  const isSlotAvailable = (x: number): boolean => {
-    return !occupiedRanges.some(([minX, maxX]) => x >= minX && x <= maxX);
-  };
+  function getFreeSegments(
+    startBound: number,
+    endBound: number,
+    obstacles: [number, number][]
+  ): { start: number; end: number; length: number }[] {
+    let segs: { start: number; end: number }[] = [{ start: startBound, end: endBound }];
+    for (const [obsStart, obsEnd] of obstacles) {
+      const nextSegs: { start: number; end: number }[] = [];
+      for (const seg of segs) {
+        if (obsEnd <= seg.start || obsStart >= seg.end) {
+          nextSegs.push(seg);
+        } else {
+          if (obsStart > seg.start + 16) {
+            nextSegs.push({ start: seg.start, end: Math.min(seg.end, obsStart) });
+          }
+          if (obsEnd < seg.end - 16) {
+            nextSegs.push({ start: Math.max(seg.start, obsEnd), end: seg.end });
+          }
+        }
+      }
+      segs = nextSegs;
+    }
+    return segs
+      .map((s) => ({ start: s.start, end: s.end, length: s.end - s.start }))
+      .filter((s) => s.length >= 18);
+  }
 
-  const flowerLeftCandidates = [116, 146, 18, 176];
-  const flowerRightCandidates = [344, 376, 408, 438, 312, 276];
+  const leftSegments = getFreeSegments(16, trunkX - 8, leftObstacles);
+  const rightSegments = getFreeSegments(trunkX + bs + 6, width - 16, rightObstacles);
 
-  const flowers: FlowerPos[] = [];
+  function generateSlotsForSide(
+    segments: { start: number; end: number; length: number }[],
+    count: number
+  ): number[] {
+    if (count <= 0 || segments.length === 0) return [];
+
+    if (segments.length === 1) {
+      const seg = segments[0];
+      const slots: number[] = [];
+      for (let i = 1; i <= count; i++) {
+        slots.push(Math.round(seg.start + (i - 0.5) * (seg.length / count)));
+      }
+      return slots;
+    }
+
+    // Distribute slots across segments respecting capacity
+    const segmentCounts = segments.map(() => 0);
+    let remaining = count;
+
+    const segIndicesByLength = segments
+      .map((s, idx) => ({ idx, length: s.length }))
+      .sort((a, b) => b.length - a.length);
+
+    while (remaining > 0) {
+      let allocatedAny = false;
+      for (const { idx } of segIndicesByLength) {
+        const seg = segments[idx];
+        const currentCount = segmentCounts[idx];
+        const cap = Math.max(1, Math.floor((seg.length + 2) / 20));
+        if (currentCount < cap && remaining > 0) {
+          segmentCounts[idx]++;
+          remaining--;
+          allocatedAny = true;
+        }
+      }
+      if (!allocatedAny) {
+        segmentCounts[segIndicesByLength[0].idx] += remaining;
+        remaining = 0;
+      }
+    }
+
+    const slots: number[] = [];
+    segments.forEach((seg, idx) => {
+      const segCount = segmentCounts[idx];
+      if (segCount > 0) {
+        for (let i = 1; i <= segCount; i++) {
+          slots.push(Math.round(seg.start + (i - 0.5) * (seg.length / segCount)));
+        }
+      }
+    });
+
+    return slots.sort((a, b) => a - b);
+  }
+
   const flowerTypes: ("poppy" | "dandelion" | "tulip" | "sakura")[] =
     treeType === "sakura"
       ? ["sakura", "poppy", "dandelion", "tulip"]
       : ["poppy", "dandelion", "tulip", "poppy"];
 
-  const flowerCount = Math.min(4, totalOpenPRs);
+  const flowerCount = Math.min(MAX_FLOWERS, totalOpenPRs);
+  const goldenAppleCount = Math.min(MAX_GOLDEN_APPLES, totalAssignedPRs);
+  const totalItems = flowerCount + goldenAppleCount;
+
+  type GroundItem = { kind: "flower"; type: "poppy" | "dandelion" | "tulip" | "sakura" } | { kind: "goldenApple" };
+
+  const rawFlowers: GroundItem[] = [];
   for (let i = 0; i < flowerCount; i++) {
-    const isLeft = i % 2 === 0;
-    const targetCandidates = isLeft ? flowerLeftCandidates : flowerRightCandidates;
-    const fallbackCandidates = isLeft ? flowerRightCandidates : flowerLeftCandidates;
-
-    let slotX = targetCandidates.find(isSlotAvailable);
-    if (slotX === undefined) {
-      slotX = fallbackCandidates.find(isSlotAvailable);
-    }
-
-    if (slotX !== undefined) {
-      occupiedRanges.push([slotX - 14, slotX + 16]);
-      flowers.push({
-        x: slotX,
-        y: groundY - 21,
-        width: 18,
-        height: 24,
-        type: flowerTypes[i % flowerTypes.length],
-        side: slotX < trunkX ? "left" : "right",
-      });
-    }
+    rawFlowers.push({ kind: "flower", type: flowerTypes[i % flowerTypes.length] });
   }
 
-  // 14. Golden Apples on Grass Lawn (Assigned PRs / Reviews) 🍏✨
-  const goldenAppleLeftCandidates = [18, 146, 116, 176];
-  const goldenAppleRightCandidates = [408, 438, 344, 376, 312, 276];
-
-  const goldenApples: GoldenApplePos[] = [];
-  const goldenAppleCount = Math.min(4, totalAssignedPRs);
-
+  const rawApples: GroundItem[] = [];
   for (let i = 0; i < goldenAppleCount; i++) {
-    const isLeft = i % 2 === 0;
-    const targetCandidates = isLeft ? goldenAppleLeftCandidates : goldenAppleRightCandidates;
-    const fallbackCandidates = isLeft ? goldenAppleRightCandidates : goldenAppleLeftCandidates;
-
-    let slotX = targetCandidates.find(isSlotAvailable);
-    if (slotX === undefined) {
-      slotX = fallbackCandidates.find(isSlotAvailable);
-    }
-
-    if (slotX !== undefined) {
-      occupiedRanges.push([slotX - 14, slotX + 16]);
-      goldenApples.push({
-        x: slotX,
-        y: groundY - 18,
-        size: 18,
-        side: slotX < trunkX ? "left" : "right",
-      });
-    }
+    rawApples.push({ kind: "goldenApple" });
   }
+
+  // Allocate items between Left and Right lawns
+  const numLeft = Math.min(4, Math.floor(totalItems / 2));
+  const numRight = totalItems - numLeft;
+
+  let leftFlowerCount = Math.min(flowerCount, Math.round((flowerCount / Math.max(1, totalItems)) * numLeft));
+  let leftAppleCount = numLeft - leftFlowerCount;
+  if (leftAppleCount > goldenAppleCount) {
+    leftAppleCount = goldenAppleCount;
+    leftFlowerCount = numLeft - leftAppleCount;
+  }
+  const rightFlowerCount = flowerCount - leftFlowerCount;
+  const rightAppleCount = goldenAppleCount - leftAppleCount;
+
+  // Interleave flowers and apples for left side
+  const leftItems: GroundItem[] = [];
+  const maxLeft = Math.max(leftFlowerCount, leftAppleCount);
+  for (let i = 0; i < maxLeft; i++) {
+    if (i < leftFlowerCount && rawFlowers.length > 0) leftItems.push(rawFlowers.shift()!);
+    if (i < leftAppleCount && rawApples.length > 0) leftItems.push(rawApples.shift()!);
+  }
+
+  // Interleave flowers and apples for right side
+  const rightItems: GroundItem[] = [];
+  const maxRight = Math.max(rightFlowerCount, rightAppleCount);
+  for (let i = 0; i < maxRight; i++) {
+    if (i < rightAppleCount && rawApples.length > 0) rightItems.push(rawApples.shift()!);
+    if (i < rightFlowerCount && rawFlowers.length > 0) rightItems.push(rawFlowers.shift()!);
+  }
+
+  const leftSlots = generateSlotsForSide(leftSegments, leftItems.length);
+  const rightSlots = generateSlotsForSide(rightSegments, rightItems.length);
+
+  const flowers: FlowerPos[] = [];
+  const goldenApples: GoldenApplePos[] = [];
+
+  leftItems.forEach((item, idx) => {
+    const slotX = leftSlots[idx];
+    if (slotX !== undefined) {
+      if (item.kind === "flower") {
+        flowers.push({
+          x: slotX,
+          y: groundY - 21,
+          width: 18,
+          height: 24,
+          type: item.type,
+          side: "left",
+        });
+      } else {
+        goldenApples.push({
+          x: slotX,
+          y: groundY - 18,
+          size: 18,
+          side: "left",
+        });
+      }
+    }
+  });
+
+  rightItems.forEach((item, idx) => {
+    const slotX = rightSlots[idx];
+    if (slotX !== undefined) {
+      if (item.kind === "flower") {
+        flowers.push({
+          x: slotX,
+          y: groundY - 21,
+          width: 18,
+          height: 24,
+          type: item.type,
+          side: "right",
+        });
+      } else {
+        goldenApples.push({
+          x: slotX,
+          y: groundY - 18,
+          size: 18,
+          side: "right",
+        });
+      }
+    }
+  });
 
   return {
     width,
