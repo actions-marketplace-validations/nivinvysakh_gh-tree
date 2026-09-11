@@ -35,12 +35,16 @@ interface CachedPRStats {
 const prStatsCache = new Map<string, CachedPRStats>();
 
 /**
- * Fetches real PR stats (open, merged) from GitHub Search API for a user with in-memory caching.
+ * Fetches real PR stats (open, merged, assigned) from GitHub Search API for a user within recency window with in-memory caching.
  */
-async function fetchUserPRStats(username: string): Promise<{ openPRs: number; mergedPRs: number; assignedPRs: number }> {
+async function fetchUserPRStats(
+  username: string,
+  prDays: number = 14
+): Promise<{ openPRs: number; mergedPRs: number; assignedPRs: number }> {
   const clean = username.toLowerCase().trim().replace(/^@/, "");
   const now = Date.now();
-  const cached = prStatsCache.get(clean);
+  const cacheKey = `${clean}-${prDays}`;
+  const cached = prStatsCache.get(cacheKey);
   if (cached && now - cached.timestamp < 3600_000) {
     return { openPRs: cached.openPRs, mergedPRs: cached.mergedPRs, assignedPRs: cached.assignedPRs };
   }
@@ -49,16 +53,22 @@ async function fetchUserPRStats(username: string): Promise<{ openPRs: number; me
   let mergedPRs = 0;
   let assignedPRs = 0;
 
+  const sinceDate = new Date(now - prDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
 
-    const [resOpen, resMerged] = await Promise.allSettled([
+    const [resOpen, resMerged, resAssigned] = await Promise.allSettled([
       fetch(`https://api.github.com/search/issues?q=author:${encodeURIComponent(clean)}+type:pr+state:open`, {
         signal: controller.signal,
         headers: { "User-Agent": "gh-tree-api", Accept: "application/vnd.github.v3+json" },
       }),
-      fetch(`https://api.github.com/search/issues?q=author:${encodeURIComponent(clean)}+type:pr+is:merged`, {
+      fetch(`https://api.github.com/search/issues?q=author:${encodeURIComponent(clean)}+type:pr+is:merged+merged:>=${sinceDate}`, {
+        signal: controller.signal,
+        headers: { "User-Agent": "gh-tree-api", Accept: "application/vnd.github.v3+json" },
+      }),
+      fetch(`https://api.github.com/search/issues?q=assignee:${encodeURIComponent(clean)}+type:pr+created:>=${sinceDate}`, {
         signal: controller.signal,
         headers: { "User-Agent": "gh-tree-api", Accept: "application/vnd.github.v3+json" },
       }),
@@ -79,7 +89,14 @@ async function fetchUserPRStats(username: string): Promise<{ openPRs: number; me
       }
     }
 
-    prStatsCache.set(clean, { openPRs, mergedPRs, assignedPRs, timestamp: now });
+    if (resAssigned.status === "fulfilled" && resAssigned.value.ok) {
+      const data: any = await resAssigned.value.json();
+      if (typeof data.total_count === "number") {
+        assignedPRs = Math.min(4, Math.max(0, data.total_count));
+      }
+    }
+
+    prStatsCache.set(cacheKey, { openPRs, mergedPRs, assignedPRs, timestamp: now });
   } catch (err) {
     console.warn("Could not fetch real PR stats, defaulting to 0:", err);
   }
@@ -94,7 +111,8 @@ export async function fetchUserContributions(
   username: string,
   openPRsOverride?: number,
   mergedPRsOverride?: number,
-  assignedPRsOverride?: number
+  assignedPRsOverride?: number,
+  prDays: number = 14
 ): Promise<ContributionData> {
   const cleanUser = username.trim().replace(/^@/, "");
   if (!cleanUser) {
@@ -103,7 +121,7 @@ export async function fetchUserContributions(
 
   const prStatsPromise =
     openPRsOverride === undefined || mergedPRsOverride === undefined || assignedPRsOverride === undefined
-      ? fetchUserPRStats(cleanUser)
+      ? fetchUserPRStats(cleanUser, prDays)
       : Promise.resolve({
           openPRs: openPRsOverride ?? 0,
           mergedPRs: mergedPRsOverride ?? 0,
@@ -389,6 +407,8 @@ export default async function handler(req: any, res: any) {
   const openPRs = query.openPRs !== undefined ? parseInt(String(query.openPRs), 10) : undefined;
   const mergedPRs = query.mergedPRs !== undefined ? parseInt(String(query.mergedPRs), 10) : undefined;
   const assignedPRs = query.assignedPRs !== undefined ? parseInt(String(query.assignedPRs), 10) : undefined;
+  const rawPrDays = query.pr_days || query.prDays;
+  const prDays = rawPrDays !== undefined ? parseInt(String(rawPrDays), 10) : 14;
   const frameIndex = query.frame !== undefined ? Math.max(0, Math.min(11, parseInt(String(query.frame), 10) || 0)) : 0;
 
   const rawFormat = (query.format || query.ext || "").toLowerCase().trim();
@@ -396,7 +416,7 @@ export default async function handler(req: any, res: any) {
   const isGif = rawFormat !== "svg" && rawFormat !== "static";
 
   try {
-    const contributionData = await fetchUserContributions(username, openPRs, mergedPRs, assignedPRs);
+    const contributionData = await fetchUserContributions(username, openPRs, mergedPRs, assignedPRs, prDays);
 
     const cleanUser = username.toLowerCase().trim();
     const rawIsOwner = query.isOwner !== undefined ? String(query.isOwner).toLowerCase().trim() : undefined;

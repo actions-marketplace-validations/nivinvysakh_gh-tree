@@ -119,19 +119,24 @@ export async function fetchGitHubProfile(username: string): Promise<GitHubUserPr
 }
 
 /**
- * Fetches PR counts (open, merged, assigned/reviews) for a user from the public GitHub Search API.
+ * Fetches PR counts (open, merged, assigned/reviews) for a user from the public GitHub Search API within the recency window.
  */
-export async function fetchUserPRStats(username: string): Promise<{ openPRs: number; mergedPRs: number; assignedPRs: number }> {
+export async function fetchUserPRStats(
+  username: string,
+  prDays: number = 14
+): Promise<{ openPRs: number; mergedPRs: number; assignedPRs: number }> {
   const cleanUser = username.trim().replace(/^@/, "");
   let openPRs = 0;
   let mergedPRs = 0;
   let assignedPRs = 0;
 
+  const sinceDate = new Date(Date.now() - prDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
   try {
     const [resOpen, resMerged, resAssigned] = await Promise.allSettled([
       fetchWithTimeout(`https://api.github.com/search/issues?q=author:${encodeURIComponent(cleanUser)}+type:pr+state:open`, {}, 6000),
-      fetchWithTimeout(`https://api.github.com/search/issues?q=author:${encodeURIComponent(cleanUser)}+type:pr+is:merged`, {}, 6000),
-      fetchWithTimeout(`https://api.github.com/search/issues?q=assignee:${encodeURIComponent(cleanUser)}+type:pr`, {}, 6000),
+      fetchWithTimeout(`https://api.github.com/search/issues?q=author:${encodeURIComponent(cleanUser)}+type:pr+is:merged+merged:>=${sinceDate}`, {}, 6000),
+      fetchWithTimeout(`https://api.github.com/search/issues?q=assignee:${encodeURIComponent(cleanUser)}+type:pr+created:>=${sinceDate}`, {}, 6000),
     ]);
 
     if (resOpen.status === "fulfilled" && resOpen.value.ok) {
@@ -274,7 +279,7 @@ export function generateMockContributions(
   totalCommits: number = 42,
   streak: number = 14,
   openPRs: number = 2,
-  mergedPRs: number = 3,
+  mergedPRs: number = 2,
   assignedPRs: number = 1
 ): ContributionData {
   const weeks: ContributionWeek[] = [];

@@ -46,7 +46,7 @@ class GhTreeApp {
     };
 
     // Initial mock data
-    this.contributionData = generateMockContributions(48, 14, 2, 4, 1);
+    this.contributionData = generateMockContributions(48, 14, 2, 2, 1);
 
     this.initUI();
     this.loadPresets();
