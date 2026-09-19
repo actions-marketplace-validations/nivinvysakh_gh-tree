@@ -249,7 +249,7 @@ export function buildTreeLayout(
     assignedPRs?: number;
   } = {}
 ): TreeLayout {
-  const width = opts.width ?? 800;
+  const width = opts.width ?? 920;
   const height = opts.height ?? 460;
   const weather = opts.weather ?? { type: "sunny", description: "Clear sky" };
   const treeType = opts.treeType ?? "oak";

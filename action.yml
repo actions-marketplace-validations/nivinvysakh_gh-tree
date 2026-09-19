@@ -100,7 +100,7 @@ inputs:
     default: "100"
   width:
     required: false
-    default: "800"
+    default: "920"
   height:
     required: false
     default: "460"

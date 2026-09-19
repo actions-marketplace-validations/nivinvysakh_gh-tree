@@ -70,7 +70,7 @@ async function run(): Promise<void> {
     const prDays = parseInt(core.getInput("pr-days") || "14", 10);
     const frameCount = parseInt(core.getInput("frames") || "20", 10);
     const frameDelayMs = parseInt(core.getInput("frame-delay-ms") || "100", 10);
-    const width = parseInt(core.getInput("width") || "800", 10);
+    const width = parseInt(core.getInput("width") || "920", 10);
     const height = parseInt(core.getInput("height") || "460", 10);
     const city = core.getInput("city") || "";
     const weatherOverride = core.getInput("weather") || "";

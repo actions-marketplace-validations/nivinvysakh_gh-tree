@@ -261,7 +261,7 @@ Add this anywhere in your `README.md`:
 
 ```markdown
 <!-- commit-tree-start -->
-![tree](tree.gif?v=1789840916512)
+![tree](tree.gif?v=1789841272294)
 <!-- commit-tree-end -->
 ```
 
@@ -282,6 +282,7 @@ The action will automatically generate `tree.gif`, update your `README.md`, and 
 | `show-campfire`   | `auto`       | Render roasting campfire during active sprints (`auto`, `true`, `false`) |
 | `show-chest`      | `auto`       | Render milestone treasure chest (`auto`, `true`, `false`) |
 | `event`           | `auto`       | Seasonal holiday event (`auto`, `halloween`, `holiday`, `fireworks`, `none`) |
+| `growth`          | `auto`       | Tree growth & foliage expansion (`auto`, `standard`, `expanded`). In `auto`, tree grows taller (+1 log trunk) and expands with new canopy leaves (14 to 21 leaves) when full |
 | `show-signpost`   | `true`       | Render wooden streak stat signpost on the grass  |
 | `show-bee`        | `true`       | Render animated Minecraft bee around the tree    |
 | `is-owner`        | `auto`       | Unlocks creator-exclusive Netherite Ore (`@nivinvysakh`) |
@@ -296,7 +297,7 @@ The action will automatically generate `tree.gif`, update your `README.md`, and 
 | `weather`         | `auto`       | Manual weather override (`auto`, `sunny`, `night`, `rain`, `snow`, `cloudy`)|
 | `frames`          | `20`         | Number of animation frames in the loop           |
 | `frame-delay-ms`  | `100`        | Frame delay in milliseconds                      |
-| `width`           | `800`        | Canvas width in pixels (widescreen profile fit)  |
+| `width`           | `920`        | Canvas width in pixels (full GitHub profile card fit) |
 | `height`          | `460`        | Canvas height in pixels (ample sky headroom)     |
 
 ## Action Outputs

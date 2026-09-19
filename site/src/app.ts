@@ -42,7 +42,7 @@ class GhTreeApp {
       event: "none",
       isOwner: true,
       isContributor: false,
-      width: 800,
+      width: 920,
       height: 460,
     };
 
