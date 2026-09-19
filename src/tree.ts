@@ -311,19 +311,25 @@ export function buildTreeLayout(
   }
 
   // 2. Canopy Leaf Blocks (14 standard or 21 expanded blocks with commit-driven green levels)
-  const recentWeeks = weeks.slice(-canopySlots.length);
-  const avgCommits = totalCommits / Math.max(1, weeks.length);
+  const paddedWeeks: ContributionWeek[] = [...weeks];
+  while (paddedWeeks.length < canopySlots.length) {
+    paddedWeeks.unshift({
+      days: [],
+      total: 0,
+      openPRs: 0,
+      mergedPRs: 0,
+      assignedPRs: 0,
+    });
+  }
+  const recentWeeks = paddedWeeks.slice(-canopySlots.length);
 
   const leafBlocks: LeafBlockPos[] = canopySlots.map((slot, idx) => {
     const x = trunkX + slot.gridX * bs;
     const y = canopyBottomY + slot.gridY * bs;
 
     const week = recentWeeks[idx];
-    const rawCommitCount = week ? week.total : Math.round(avgCommits);
-    const directLevel = getCommitLevel(rawCommitCount);
-
-    // If developer is highly active, blend weekly spikes with active baseline
-    const commitLevel = Math.min(4, Math.max(baselineLevel, directLevel));
+    const rawCommitCount = week ? week.total : 0;
+    const commitLevel = getCommitLevel(rawCommitCount);
 
     return {
       gridX: slot.gridX,

@@ -175,24 +175,26 @@ export async function fetchUserContributions(
   const mergedPRs = mergedPRsOverride ?? prStats.mergedPRs;
   const assignedPRs = assignedPRsOverride ?? prStats.assignedPRs;
 
-  // Slice the most recent 28 days into 4 distinct weeks
-  const recentDays = allDays.slice(-28);
+  // Chunk all historical contribution days into chronological 7-day weeks (up to full year)
   const weeks: ContributionWeek[] = [];
+  const totalWeeks = Math.ceil(allDays.length / 7);
 
-  for (let w = 0; w < 4; w++) {
-    const slice = recentDays.slice(w * 7, (w + 1) * 7);
+  for (let i = 0; i < allDays.length; i += 7) {
+    const slice = allDays.slice(i, i + 7);
     const days: ContributionDay[] = slice.map((d) => ({
       date: d.date,
       count: d.count,
     }));
     const total = days.reduce((sum, d) => sum + d.count, 0);
+    const weekIndex = Math.floor(i / 7);
+    const isRecentWeek = weekIndex >= totalWeeks - 4;
 
     weeks.push({
       days,
       total,
-      openPRs: Math.round(openPRs / 4),
-      mergedPRs: Math.round(mergedPRs / 4),
-      assignedPRs: Math.round(assignedPRs / 4),
+      openPRs: isRecentWeek ? Math.round(openPRs / 4) : 0,
+      mergedPRs: isRecentWeek ? Math.round(mergedPRs / 4) : 0,
+      assignedPRs: isRecentWeek ? Math.round(assignedPRs / 4) : 0,
     });
   }
 

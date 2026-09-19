@@ -225,24 +225,26 @@ export async function fetchGitHubContributions(
       if (data.contributions && Array.isArray(data.contributions) && data.contributions.length > 0) {
         const allDays: { date: string; count: number }[] = data.contributions;
         
-        // Take the last 28 days (4 weeks) for the tree canopy
-        const recentDays = allDays.slice(-28);
+        // Chunk all historical contribution days into chronological 7-day weeks (up to full year)
         const weeks: ContributionWeek[] = [];
+        const totalWeeks = Math.ceil(allDays.length / 7);
 
-        for (let w = 0; w < 4; w++) {
-          const slice = recentDays.slice(w * 7, (w + 1) * 7);
+        for (let i = 0; i < allDays.length; i += 7) {
+          const slice = allDays.slice(i, i + 7);
           const days: ContributionDay[] = slice.map((d) => ({
             date: d.date,
             count: d.count,
           }));
           const total = days.reduce((sum, d) => sum + d.count, 0);
+          const weekIndex = Math.floor(i / 7);
+          const isRecentWeek = weekIndex >= totalWeeks - 4;
 
           weeks.push({
             days,
             total,
-            openPRs: Math.round(openPRs / 4),
-            mergedPRs: Math.round(mergedPRs / 4),
-            assignedPRs: Math.round(assignedPRs / 4),
+            openPRs: isRecentWeek ? Math.round(openPRs / 4) : 0,
+            mergedPRs: isRecentWeek ? Math.round(mergedPRs / 4) : 0,
+            assignedPRs: isRecentWeek ? Math.round(assignedPRs / 4) : 0,
           });
         }
 
@@ -286,24 +288,42 @@ export function generateMockContributions(
   const weeks: ContributionWeek[] = [];
   const now = new Date();
 
+  const weights = [
+    0.5, 1.2, 2.0, 0.8, 1.5, 2.5, 0.3, 1.8, 3.0, 1.1,
+    0.6, 2.2, 1.4, 0.9, 1.7, 2.8, 0.4, 1.9, 2.1, 1.3,
+    0.7, 1.6, 2.4, 1.5,
+  ];
+
+  const totalWeight = weights.slice(0, weekCount).reduce((a, b) => a + b, 0);
+  let remainingCommits = totalCommits;
+
   for (let w = 0; w < weekCount; w++) {
+    const weight = weights[w % weights.length];
+    const isLast = w === weekCount - 1;
+    const weekCommits = isLast
+      ? Math.max(0, remainingCommits)
+      : Math.min(remainingCommits, Math.round((weight / totalWeight) * totalCommits));
+    remainingCommits = Math.max(0, remainingCommits - weekCommits);
+
     const days: ContributionDay[] = [];
-    let weekTotal = 0;
+    let weekDayRemaining = weekCommits;
 
     for (let d = 0; d < 7; d++) {
       const dayOffset = (weekCount - 1 - w) * 7 + (6 - d);
       const date = new Date(now.getTime() - dayOffset * 86400000);
       const dateStr = date.toISOString().split("T")[0];
-      
-      // Distribute commits realistically
-      const count = Math.floor(Math.random() * 5) + (dayOffset < streak ? 1 : 0);
-      weekTotal += count;
+      const isLastDay = d === 6;
+      const count = isLastDay
+        ? weekDayRemaining
+        : Math.min(weekDayRemaining, Math.round(weekDayRemaining / (7 - d)));
+      weekDayRemaining = Math.max(0, weekDayRemaining - count);
+
       days.push({ date: dateStr, count });
     }
 
     weeks.push({
       days,
-      total: weekTotal,
+      total: weekCommits,
       openPRs: w >= weekCount - 2 ? Math.round(openPRs / 2) : 0,
       mergedPRs: w >= weekCount - 2 ? Math.round(mergedPRs / 2) : 0,
       assignedPRs: w >= weekCount - 2 ? Math.round(assignedPRs / 2) : 0,
