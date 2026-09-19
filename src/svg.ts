@@ -20,6 +20,7 @@ import {
   renderMinecraftBee,
   renderMinecraftBeehive,
   renderMinecraftSignpost,
+  renderMinecraftFarmer,
   renderMinecraftWolf,
   renderMinecraftFox,
   renderMinecraftCat,
@@ -54,6 +55,7 @@ export {
   renderMinecraftBee,
   renderMinecraftBeehive,
   renderMinecraftSignpost,
+  renderMinecraftFarmer,
   renderMinecraftWolf,
   renderMinecraftFox,
   renderMinecraftCat,
@@ -86,6 +88,7 @@ export function renderFrame(
     beehive,
     signpost,
     pet,
+    farmer,
     campfire,
     chest,
     seasonalEvent,
@@ -108,42 +111,58 @@ export function renderFrame(
 
   if (isNight) {
     // Night: Minecraft Moon + Twinkling Stars + Night Clouds
-    const moonX = width - 82;
+    const moonX = width - 88;
     const moonY = 18;
     const moonSize = 34;
     skySvg += renderMinecraftMoon(moonX, moonY, moonSize, frameIndex, totalFrames);
     skySvg += renderMinecraftStars(width, frameIndex);
 
-    const cloud1X = 18 + Math.sin(driftRatio * Math.PI * 2) * 8;
-    skySvg += renderMinecraftCloud(cloud1X, 32, 1.0, 0.65);
+    const cloud1X = 28 + Math.sin(driftRatio * Math.PI * 2) * 8;
+    skySvg += renderMinecraftCloud(cloud1X, 26, 0.95, 0.65);
+    if (width > 550) {
+      const cloud2X = width - 280 - Math.sin(driftRatio * Math.PI * 2) * 8;
+      skySvg += renderMinecraftCloud(cloud2X, 34, 0.85, 0.55);
+    }
   } else if (isSunny) {
     // Day: Minecraft Sun + Daylight Cloud
-    const sunX = width - 82;
+    const sunX = width - 88;
     const sunY = 18;
     const sunSize = 34;
     skySvg += renderMinecraftSun(sunX, sunY, sunSize, frameIndex, totalFrames);
 
-    const cloud1X = 18 + Math.sin(driftRatio * Math.PI * 2) * 8;
-    skySvg += renderMinecraftCloud(cloud1X, 32, 1.0, 0.85);
+    const cloud1X = 28 + Math.sin(driftRatio * Math.PI * 2) * 8;
+    skySvg += renderMinecraftCloud(cloud1X, 26, 0.95, 0.85);
+    if (width > 550) {
+      const cloud2X = width - 280 - Math.sin(driftRatio * Math.PI * 2) * 8;
+      skySvg += renderMinecraftCloud(cloud2X, 34, 0.85, 0.75);
+    }
   } else if (isCloudy) {
-    const cloud1X = 14 + Math.sin(driftRatio * Math.PI * 2) * 10;
-    const cloud2X = width - 120 - Math.sin(driftRatio * Math.PI * 2) * 8;
-    const cloud3X = width / 2 - 30 + Math.cos(driftRatio * Math.PI * 2) * 6;
-    skySvg += renderMinecraftCloud(cloud1X, 22, 1.1, 0.9);
-    skySvg += renderMinecraftCloud(cloud2X, 38, 0.9, 0.85);
-    skySvg += renderMinecraftCloud(cloud3X, 15, 0.8, 0.75);
+    const cloud1X = 24 + Math.sin(driftRatio * Math.PI * 2) * 8;
+    const cloud2X = width - 220 - Math.sin(driftRatio * Math.PI * 2) * 8;
+    const cloud3X = 130 + Math.cos(driftRatio * Math.PI * 2) * 6;
+    skySvg += renderMinecraftCloud(cloud1X, 24, 1.0, 0.9);
+    skySvg += renderMinecraftCloud(cloud2X, 32, 0.9, 0.85);
+    skySvg += renderMinecraftCloud(cloud3X, 18, 0.8, 0.75);
   } else if (isRain) {
     // Storm clouds
-    const stormCloud1X = 10 + Math.sin(driftRatio * Math.PI * 2) * 6;
-    const stormCloud2X = width - 130 - Math.sin(driftRatio * Math.PI * 2) * 6;
-    skySvg += renderMinecraftCloud(stormCloud1X, 16, 1.3, 0.95, true);
-    skySvg += renderMinecraftCloud(stormCloud2X, 24, 1.2, 0.95, true);
+    const stormCloud1X = 20 + Math.sin(driftRatio * Math.PI * 2) * 6;
+    const stormCloud2X = width - 220 - Math.sin(driftRatio * Math.PI * 2) * 6;
+    const stormCloud3X = 130 + Math.cos(driftRatio * Math.PI * 2) * 6;
+    skySvg += renderMinecraftCloud(stormCloud1X, 20, 1.1, 0.95, true);
+    skySvg += renderMinecraftCloud(stormCloud2X, 28, 1.05, 0.95, true);
+    if (width > 550) {
+      skySvg += renderMinecraftCloud(stormCloud3X, 16, 0.95, 0.9, true);
+    }
   } else if (isSnow) {
     // Winter overcast clouds
-    const snowCloud1X = 20 + Math.sin(driftRatio * Math.PI * 2) * 6;
-    const snowCloud2X = width - 110 - Math.sin(driftRatio * Math.PI * 2) * 6;
-    skySvg += renderMinecraftCloud(snowCloud1X, 22, 1.1, 0.9);
+    const snowCloud1X = 24 + Math.sin(driftRatio * Math.PI * 2) * 6;
+    const snowCloud2X = width - 220 - Math.sin(driftRatio * Math.PI * 2) * 6;
+    const snowCloud3X = 130 + Math.cos(driftRatio * Math.PI * 2) * 6;
+    skySvg += renderMinecraftCloud(snowCloud1X, 22, 1.0, 0.9);
     skySvg += renderMinecraftCloud(snowCloud2X, 30, 0.9, 0.85);
+    if (width > 550) {
+      skySvg += renderMinecraftCloud(snowCloud3X, 18, 0.85, 0.8);
+    }
   }
 
   // Fireworks in Sky (New Year Event)
@@ -195,7 +214,7 @@ export function renderFrame(
   // 11. Golden Apples on Grass
   const goldenApplesSvg = (goldenApples || []).map((g) => renderGoldenAppleOnGrass(g, frameIndex)).join("\n");
 
-  // 12. Pet Companion (Wolf / Fox / Cat / Parrot)
+  // 12. Pet Animal Companion (Wolf / Fox / Cat / Parrot - Left side)
   let petSvg = "";
   if (pet) {
     if (pet.type === "wolf") {
@@ -209,13 +228,19 @@ export function renderFrame(
     }
   }
 
-  // 13. Roasting Campfire
+  // 13. Minecraft Farmer Under Tree (Right side)
+  let farmerSvg = "";
+  if (farmer) {
+    farmerSvg = renderMinecraftFarmer(farmer, frameIndex, totalFrames);
+  }
+
+  // 14. Roasting Campfire
   let campfireSvg = "";
   if (campfire) {
     campfireSvg = renderMinecraftCampfire(campfire, frameIndex, totalFrames);
   }
 
-  // 14. Halloween Jack-o'-Lantern & Flying Ghosts
+  // 15. Halloween Jack-o'-Lantern & Flying Ghosts
   let jackOLanternSvg = "";
   let ghostsSvg = "";
   if (jackOLantern) {
@@ -223,25 +248,25 @@ export function renderFrame(
     ghostsSvg = renderHalloweenGhosts(jackOLantern.x, jackOLantern.y, frameIndex, totalFrames);
   }
 
-  // 15. Holiday Gift Boxes
+  // 16. Holiday Gift Boxes
   let holidayGiftsSvg = "";
   if (holidayGifts && holidayGifts.length > 0) {
     holidayGiftsSvg = renderSeasonalHolidayGifts(holidayGifts, frameIndex);
   }
 
-  // 16. Flying Minecraft Bee
+  // 17. Flying Minecraft Bee
   let beeSvg = "";
   if (bee && !isRain && !isSnow) {
     beeSvg = renderMinecraftBee(bee.x, bee.y, frameIndex, totalFrames);
   }
 
-  // 17. Ambient Bioluminescent Spores / Particles (Nether & Night Biomes)
+  // 18. Ambient Bioluminescent Spores / Particles (Nether & Night Biomes)
   let sporesSvg = "";
   if (treeType === "crimson" || treeType === "warped" || (isNight && !isRain && !isSnow)) {
     sporesSvg = renderBioluminescentParticles(width, groundY, frameIndex, totalFrames, treeType);
   }
 
-  // 18. Foreground Weather Precipitation or Sakura Petals
+  // 19. Foreground Weather Precipitation or Sakura Petals
   let precipSvg = "";
   if (isRain) {
     precipSvg = renderRainStreaks(width, groundY, frameIndex, totalFrames);
@@ -264,6 +289,7 @@ export function renderFrame(
   ${goldenApplesSvg}
   ${flowersSvg}
   ${petSvg}
+  ${farmerSvg}
   ${campfireSvg}
   ${jackOLanternSvg}
   ${ghostsSvg}

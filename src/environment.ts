@@ -51,23 +51,26 @@ export function renderMinecraftMoon(
 
 export function renderMinecraftStars(width: number, frameIndex: number): string {
   let stars = "";
-  const starCoords = [
-    { x: 30, y: 35, s: 2, phase: 0 },
-    { x: 75, y: 70, s: 1.5, phase: 1 },
-    { x: 120, y: 40, s: 2.5, phase: 2 },
-    { x: 170, y: 85, s: 1.5, phase: 0 },
-    { x: 230, y: 25, s: 2, phase: 1 },
-    { x: 290, y: 65, s: 1.5, phase: 2 },
-    { x: 340, y: 30, s: 2.5, phase: 0 },
-    { x: 395, y: 75, s: 2, phase: 1 },
-    { x: 430, y: 45, s: 1.5, phase: 2 },
-    { x: 50, y: 110, s: 1.5, phase: 0 },
-    { x: 145, y: 125, s: 2, phase: 1 },
-    { x: 315, y: 115, s: 2, phase: 2 },
-    { x: 380, y: 130, s: 1.5, phase: 0 },
+  const baseStarCoords = [
+    // Left sky flank
+    { x: 30, y: 25, s: 2, phase: 0 },
+    { x: 75, y: 55, s: 1.5, phase: 1 },
+    { x: 120, y: 30, s: 2.5, phase: 2 },
+    { x: 165, y: 70, s: 1.5, phase: 0 },
+    { x: 210, y: 25, s: 2, phase: 1 },
+    { x: 260, y: 55, s: 1.5, phase: 2 },
+    { x: 50, y: 95, s: 1.5, phase: 0 },
+    { x: 140, y: 110, s: 2, phase: 1 },
+    // Right sky flank
+    { x: width - 240, y: 35, s: 2, phase: 1 },
+    { x: width - 190, y: 65, s: 1.5, phase: 2 },
+    { x: width - 145, y: 30, s: 2.5, phase: 0 },
+    { x: width - 50, y: 75, s: 1.5, phase: 1 },
+    { x: width - 110, y: 115, s: 2, phase: 2 },
+    { x: width - 220, y: 105, s: 1.5, phase: 0 },
   ];
 
-  for (const star of starCoords) {
+  for (const star of baseStarCoords) {
     if (star.x < width) {
       const twinkle = (frameIndex + star.phase * 2) % 3 === 0;
       const opacity = twinkle ? 0.95 : 0.45;
@@ -90,15 +93,19 @@ export function renderBioluminescentParticles(
   treeType: TreeType
 ): string {
   let rects = "";
-  const count = 14;
+  const count = Math.max(16, Math.round(width / 24));
   const isCrimson = treeType === "crimson";
   const isWarped = treeType === "warped";
   const color1 = isCrimson ? "#ff5252" : isWarped ? "#00e5ff" : "#ffd54f";
   const color2 = isCrimson ? "#ff8a80" : isWarped ? "#80d8ff" : "#fff59d";
 
+  // Constrain rise so particles float gracefully around ground & lower foliage without occluding upper canopy/sky/moon
+  const maxRise = Math.min(180, Math.round((groundY - 50) * 0.45));
+
   for (let i = 0; i < count; i++) {
-    const seedX = (i * 33 + 19) % width;
-    const rise = ((frameIndex * 3 + i * 11) % (groundY - 50));
+    const baseSegment = width / count;
+    const seedX = (i * baseSegment + ((i * 17 + 13) % baseSegment)) % width;
+    const rise = ((frameIndex * 4 + i * 11) % maxRise);
     const py = groundY - 15 - rise;
     const sway = Math.sin((frameIndex + i) * 0.45) * 6;
     const px = (seedX + sway + width) % width;
@@ -147,11 +154,12 @@ export function renderRainStreaks(
   _totalFrames: number
 ): string {
   let rects = "";
-  const dropCount = 42;
+  const dropCount = Math.max(42, Math.round(width / 12));
   const speed = 14;
 
   for (let i = 0; i < dropCount; i++) {
-    const seedX = (i * 37 + 13) % width;
+    const baseSegment = width / dropCount;
+    const seedX = (i * baseSegment + ((i * 19 + 7) % baseSegment)) % width;
     const initialY = (i * 23) % (groundY - 10);
     const dropY = (initialY + frameIndex * speed) % (groundY - 5);
     const dropX = (seedX - frameIndex * 2 + width) % width;
@@ -176,11 +184,12 @@ export function renderSnowflakes(
   _totalFrames: number
 ): string {
   let rects = "";
-  const flakeCount = 32;
+  const flakeCount = Math.max(32, Math.round(width / 18));
   const speed = 10;
 
   for (let i = 0; i < flakeCount; i++) {
-    const seedX = (i * 41 + 17) % width;
+    const baseSegment = width / flakeCount;
+    const seedX = (i * baseSegment + ((i * 23 + 11) % baseSegment)) % width;
     const initialY = (i * 29) % (groundY - 20);
     const flakeY = (initialY + frameIndex * speed) % (groundY - 5);
     
@@ -202,10 +211,11 @@ export function renderSakuraPetals(
   _totalFrames: number
 ): string {
   let petals = "";
-  const petalCount = 20;
+  const petalCount = Math.max(20, Math.round(width / 25));
 
   for (let i = 0; i < petalCount; i++) {
-    const seedX = (i * 47 + 23) % width;
+    const baseSegment = width / petalCount;
+    const seedX = (i * baseSegment + ((i * 29 + 17) % baseSegment)) % width;
     const initialY = (i * 31) % (groundY - 30);
     const speedY = 5 + (i % 4);
     const petalY = (initialY + frameIndex * speedY) % (groundY - 8);
@@ -228,9 +238,9 @@ export function renderSeasonalFireworks(
   totalFrames: number = 20
 ): string {
   const bursts = [
-    { cx: 85, cy: 55, color: "#00e5ff", core: "#ffffff", phase: 0 },
-    { cx: 230, cy: 38, color: "#ffd600", core: "#fff9c4", phase: 6 },
-    { cx: 375, cy: 62, color: "#ff4081", core: "#ffffff", phase: 12 },
+    { cx: Math.round(width * 0.2), cy: 55, color: "#00e5ff", core: "#ffffff", phase: 0 },
+    { cx: Math.round(width * 0.5), cy: 38, color: "#ffd600", core: "#fff9c4", phase: 6 },
+    { cx: Math.round(width * 0.8), cy: 62, color: "#ff4081", core: "#ffffff", phase: 12 },
   ];
 
   let res = "";
