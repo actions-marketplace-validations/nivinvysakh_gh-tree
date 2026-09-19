@@ -102,8 +102,8 @@ async function runMockGeneration(): Promise<void> {
     };
   });
 
-  const width = 460;
-  const height = 420;
+  const width = 800;
+  const height = 460;
   const frameCount = 14;
   const frameDelayMs = 110;
 

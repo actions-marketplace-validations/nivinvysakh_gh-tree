@@ -31,8 +31,8 @@ Complete technical reference for all **`gh-tree`** GitHub Action parameters.
 | `commit-message` | `string` | `chore: update commit tree [skip ci]` | Git commit message. |
 | `frames` | `number` | `20` | Number of animation frames in the loop. |
 | `frame-delay-ms` | `number` | `100` | Frame delay in milliseconds. |
-| `width` | `number` | `460` | Canvas width in pixels. |
-| `height` | `number` | `420` | Canvas height in pixels. |
+| `width` | `number` | `800` | Canvas width in pixels (widescreen profile fit). |
+| `height` | `number` | `460` | Canvas height in pixels (ample sky headroom). |
 
 ---
 

@@ -28,6 +28,7 @@ class GhTreeApp {
     // Initial default settings
     this.settings = {
       treeType: "oak",
+      growth: "auto",
       pet: "none",
       showFarmer: "auto",
       farmerMood: "auto",
@@ -41,8 +42,8 @@ class GhTreeApp {
       event: "none",
       isOwner: true,
       isContributor: false,
-      width: 480,
-      height: 400,
+      width: 800,
+      height: 460,
     };
 
     // Initial mock data
@@ -100,6 +101,18 @@ class GhTreeApp {
         card.classList.add("active");
         const biome = card.getAttribute("data-biome") as TreeType;
         this.settings.treeType = biome;
+        this.updatePreview();
+      });
+    });
+
+    // 3b. Tree Growth & Foliage Expansion Selector Pills
+    const growthPills = document.querySelectorAll<HTMLElement>("#growth-selector .pill-item");
+    growthPills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        growthPills.forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
+        const growth = (pill.getAttribute("data-growth") || "auto") as "auto" | "standard" | "expanded";
+        this.settings.growth = growth;
         this.updatePreview();
       });
     });
@@ -404,6 +417,10 @@ class GhTreeApp {
     document.querySelectorAll(".biome-card").forEach((c) => {
       c.classList.toggle("active", c.getAttribute("data-biome") === this.settings.treeType);
     });
+    // Growth
+    document.querySelectorAll("#growth-selector .pill-item").forEach((g) => {
+      g.classList.toggle("active", g.getAttribute("data-growth") === (this.settings.growth || "auto"));
+    });
     // Farmer
     document.querySelectorAll("#farmer-selector .pill-item").forEach((p) => {
       const fVal = String(this.settings.showFarmer);
@@ -645,6 +662,9 @@ class GhTreeApp {
     if (this.settings.treeType && this.settings.treeType !== "oak") {
       params.set("theme", this.settings.treeType);
     }
+    if (this.settings.growth && this.settings.growth !== "auto") {
+      params.set("growth", this.settings.growth);
+    }
     if (this.selectedCity) {
       params.set("city", this.selectedCity);
     } else if (this.settings.weatherType && this.settings.weatherType !== "sunny") {
@@ -799,7 +819,7 @@ jobs:
         uses: nivinvysakh/gh-tree@v1
         with:
           github-token: \${{ secrets.GITHUB_TOKEN }}
-          tree-type: '${this.settings.treeType}'
+          tree-type: '${this.settings.treeType}'${this.settings.growth && this.settings.growth !== "auto" ? `\n          growth: '${this.settings.growth}'` : ""}
           pet: '${this.settings.pet}'
           show-farmer: ${this.settings.showFarmer}${this.settings.farmerMood !== "auto" ? `\n          farmer-mood: '${this.settings.farmerMood}'` : ""}
           event: '${this.settings.event}'

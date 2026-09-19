@@ -70,8 +70,8 @@ async function run(): Promise<void> {
     const prDays = parseInt(core.getInput("pr-days") || "14", 10);
     const frameCount = parseInt(core.getInput("frames") || "20", 10);
     const frameDelayMs = parseInt(core.getInput("frame-delay-ms") || "100", 10);
-    const width = parseInt(core.getInput("width") || "460", 10);
-    const height = parseInt(core.getInput("height") || "420", 10);
+    const width = parseInt(core.getInput("width") || "800", 10);
+    const height = parseInt(core.getInput("height") || "460", 10);
     const city = core.getInput("city") || "";
     const weatherOverride = core.getInput("weather") || "";
     const rawTreeType = (core.getInput("tree-type") || "oak").toLowerCase().trim();
@@ -173,11 +173,17 @@ async function run(): Promise<void> {
       ? rawEvent
       : "auto") as "auto" | "halloween" | "holiday" | "fireworks" | "none";
 
+    const rawGrowth = (core.getInput("growth") || "auto").trim().toLowerCase();
+    const growth = (["auto", "standard", "expanded"].includes(rawGrowth)
+      ? rawGrowth
+      : "auto") as "auto" | "standard" | "expanded";
+
     const layout = buildTreeLayout(contributions.weeks, undefined, {
       width,
       height,
       weather,
       treeType,
+      growth,
       showSignpost,
       showBee,
       isOwner,

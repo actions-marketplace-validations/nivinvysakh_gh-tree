@@ -221,7 +221,7 @@ describe("Minecraft tree module", () => {
       expect(wolfLayout.pet).toBeDefined();
       expect(wolfLayout.pet?.type).toBe("wolf");
       expect(wolfLayout.pet?.state).toBe("sitting");
-      expect(wolfLayout.pet?.x).toBe(176); // Left side of tree
+      expect(wolfLayout.pet?.x).toBe(wolfLayout.trunkX - 34); // Left side of tree
 
       // Streak >= 7 -> Fox (sleeping in daytime, standing at night)
       const streak7Weeks: ContributionWeek[] = [
@@ -263,7 +263,7 @@ describe("Minecraft tree module", () => {
       ];
       const sadFarmerLayout = buildTreeLayout(dryWeeks);
       expect(sadFarmerLayout.farmer).toBeDefined();
-      expect(sadFarmerLayout.farmer?.x).toBe(266); // Right side of tree
+      expect(sadFarmerLayout.farmer?.x).toBe(sadFarmerLayout.trunkX + 48 + 10); // Right side of tree
       expect(sadFarmerLayout.farmer?.mood).toBe("sad");
 
       // 2. Neutral / Steady Growth Tree (1-29 commits) -> Watering Farmer
@@ -294,9 +294,9 @@ describe("Minecraft tree module", () => {
       // 6. Coexistence of Pet on the left and Farmer on the right
       const dualLayout = buildTreeLayout(flourishingWeeks, undefined, { pet: "wolf" });
       expect(dualLayout.pet?.type).toBe("wolf");
-      expect(dualLayout.pet?.x).toBe(176); // Left of trunk
+      expect(dualLayout.pet?.x).toBe(dualLayout.trunkX - 34); // Left of trunk
       expect(dualLayout.farmer).toBeDefined();
-      expect(dualLayout.farmer?.x).toBe(266); // Right of trunk
+      expect(dualLayout.farmer?.x).toBe(dualLayout.trunkX + 48 + 10); // Right of trunk
     });
 
     it("triggers roasting campfire during high activity sprints or manual toggle", () => {
@@ -385,6 +385,44 @@ describe("Minecraft tree module", () => {
       const manualHalloween = buildTreeLayout([], undefined, { event: "halloween" });
       expect(manualHalloween.seasonalEvent).toBe("halloween");
       expect(manualHalloween.jackOLantern).toBeDefined();
+    });
+
+    it("grows taller (+1 log trunk) and expands with new canopy leaves (21 blocks) when leaves are full", () => {
+      // 1. Full leaves via high commits (>= 50)
+      const fullCommitsWeeks: ContributionWeek[] = [
+        { days: [{ date: "2026-08-01", count: 60 }], total: 60, openPRs: 0, mergedPRs: 0, assignedPRs: 0 },
+      ];
+      const grownLayout = buildTreeLayout(fullCommitsWeeks);
+      expect(grownLayout.growthStage).toBe("expanded");
+      expect(grownLayout.isExpanded).toBe(true);
+      expect(grownLayout.trunkBlocks).toHaveLength(4); // 4 logs high
+      expect(grownLayout.leafBlocks).toHaveLength(21); // 21 expanded leaves
+
+      // Verify peak leaf reaches higher apex at gridY = -4
+      const apexLeaf = grownLayout.leafBlocks.find((l) => l.gridY === -4);
+      expect(apexLeaf).toBeDefined();
+      expect(apexLeaf?.gridX).toBe(0);
+
+      // Verify widened side branches at gridY = -1 (gridX = -3 and 3)
+      expect(grownLayout.leafBlocks.some((l) => l.gridY === -1 && l.gridX === -3)).toBe(true);
+      expect(grownLayout.leafBlocks.some((l) => l.gridY === -1 && l.gridX === 3)).toBe(true);
+
+      // 2. Full leaves via streak (>= 14)
+      const streakLayout = buildTreeLayout([], undefined, { streak: 14 });
+      expect(streakLayout.growthStage).toBe("expanded");
+      expect(streakLayout.trunkBlocks).toHaveLength(4);
+      expect(streakLayout.leafBlocks).toHaveLength(21);
+
+      // 3. Manual override growth: 'expanded' vs 'standard'
+      const forcedExpanded = buildTreeLayout(mockWeeks, undefined, { growth: "expanded" });
+      expect(forcedExpanded.growthStage).toBe("expanded");
+      expect(forcedExpanded.trunkBlocks).toHaveLength(4);
+      expect(forcedExpanded.leafBlocks).toHaveLength(21);
+
+      const forcedStandard = buildTreeLayout(fullCommitsWeeks, undefined, { growth: "standard" });
+      expect(forcedStandard.growthStage).toBe("standard");
+      expect(forcedStandard.trunkBlocks).toHaveLength(3);
+      expect(forcedStandard.leafBlocks).toHaveLength(14);
     });
   });
 });

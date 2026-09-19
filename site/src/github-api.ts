@@ -280,17 +280,18 @@ export function generateMockContributions(
   streak: number = 14,
   openPRs: number = 2,
   mergedPRs: number = 2,
-  assignedPRs: number = 1
+  assignedPRs: number = 1,
+  weekCount: number = 24
 ): ContributionData {
   const weeks: ContributionWeek[] = [];
   const now = new Date();
 
-  for (let w = 0; w < 4; w++) {
+  for (let w = 0; w < weekCount; w++) {
     const days: ContributionDay[] = [];
     let weekTotal = 0;
 
     for (let d = 0; d < 7; d++) {
-      const dayOffset = (3 - w) * 7 + (6 - d);
+      const dayOffset = (weekCount - 1 - w) * 7 + (6 - d);
       const date = new Date(now.getTime() - dayOffset * 86400000);
       const dateStr = date.toISOString().split("T")[0];
       
@@ -303,9 +304,9 @@ export function generateMockContributions(
     weeks.push({
       days,
       total: weekTotal,
-      openPRs: Math.round(openPRs / 4),
-      mergedPRs: Math.round(mergedPRs / 4),
-      assignedPRs: Math.round(assignedPRs / 4),
+      openPRs: w >= weekCount - 2 ? Math.round(openPRs / 2) : 0,
+      mergedPRs: w >= weekCount - 2 ? Math.round(mergedPRs / 2) : 0,
+      assignedPRs: w >= weekCount - 2 ? Math.round(assignedPRs / 2) : 0,
     });
   }
 

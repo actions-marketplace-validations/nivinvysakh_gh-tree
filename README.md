@@ -261,7 +261,7 @@ Add this anywhere in your `README.md`:
 
 ```markdown
 <!-- commit-tree-start -->
-![tree](tree.gif?v=1789137327788)
+![tree](tree.gif?v=1789840916512)
 <!-- commit-tree-end -->
 ```
 
@@ -296,8 +296,8 @@ The action will automatically generate `tree.gif`, update your `README.md`, and 
 | `weather`         | `auto`       | Manual weather override (`auto`, `sunny`, `night`, `rain`, `snow`, `cloudy`)|
 | `frames`          | `20`         | Number of animation frames in the loop           |
 | `frame-delay-ms`  | `100`        | Frame delay in milliseconds                      |
-| `width`           | `460`        | Canvas width in pixels                           |
-| `height`          | `420`        | Canvas height in pixels                          |
+| `width`           | `800`        | Canvas width in pixels (widescreen profile fit)  |
+| `height`          | `460`        | Canvas height in pixels (ample sky headroom)     |
 
 ## Action Outputs
 

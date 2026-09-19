@@ -124,6 +124,8 @@ export interface SignpostPos {
   streak: number;
 }
 
+export type TreeGrowthMode = "auto" | "standard" | "expanded";
+
 export interface TreeLayout {
   width: number;
   height: number;
@@ -154,9 +156,11 @@ export interface TreeLayout {
   weather: WeatherCondition;
   isOwner?: boolean;
   isContributor?: boolean;
+  growthStage?: "standard" | "expanded";
+  isExpanded?: boolean;
 }
 
-const CANOPY_SLOTS: { gridX: number; gridY: number }[] = [
+export const STANDARD_CANOPY_SLOTS: { gridX: number; gridY: number }[] = [
   // Tier 0 (Bottom tier)
   { gridX: -2, gridY: 0 },
   { gridX: -1, gridY: 0 },
@@ -177,6 +181,37 @@ const CANOPY_SLOTS: { gridX: number; gridY: number }[] = [
   { gridX: 0, gridY: -3 },
 ];
 
+export const EXPANDED_CANOPY_SLOTS: { gridX: number; gridY: number }[] = [
+  // Tier 0 (Bottom tier) - 5 blocks
+  { gridX: -2, gridY: 0 },
+  { gridX: -1, gridY: 0 },
+  { gridX: 0, gridY: 0 },
+  { gridX: 1, gridY: 0 },
+  { gridX: 2, gridY: 0 },
+  // Tier -1 (Lower mid) - 7 blocks (expanded outwards)
+  { gridX: -3, gridY: -1 },
+  { gridX: -2, gridY: -1 },
+  { gridX: -1, gridY: -1 },
+  { gridX: 0, gridY: -1 },
+  { gridX: 1, gridY: -1 },
+  { gridX: 2, gridY: -1 },
+  { gridX: 3, gridY: -1 },
+  // Tier -2 (Upper mid) - 5 blocks (widened canopy)
+  { gridX: -2, gridY: -2 },
+  { gridX: -1, gridY: -2 },
+  { gridX: 0, gridY: -2 },
+  { gridX: 1, gridY: -2 },
+  { gridX: 2, gridY: -2 },
+  // Tier -3 (High crown) - 3 blocks (broad upper crown)
+  { gridX: -1, gridY: -3 },
+  { gridX: 0, gridY: -3 },
+  { gridX: 1, gridY: -3 },
+  // Tier -4 (Apex peak crown) - 1 block (taller majestic apex)
+  { gridX: 0, gridY: -4 },
+];
+
+export const CANOPY_SLOTS = STANDARD_CANOPY_SLOTS;
+
 /**
  * Maps commit counts to GitHub contribution intensity level (0 to 4)
  */
@@ -196,6 +231,7 @@ export function buildTreeLayout(
     height?: number;
     weather?: WeatherCondition;
     treeType?: TreeType;
+    growth?: TreeGrowthMode;
     showSignpost?: boolean;
     showBee?: boolean;
     isOwner?: boolean;
@@ -213,8 +249,8 @@ export function buildTreeLayout(
     assignedPRs?: number;
   } = {}
 ): TreeLayout {
-  const width = opts.width ?? 460;
-  const height = opts.height ?? 420;
+  const width = opts.width ?? 800;
+  const height = opts.height ?? 460;
   const weather = opts.weather ?? { type: "sunny", description: "Clear sky" };
   const treeType = opts.treeType ?? "oak";
   const bs = BLOCK_SIZE; // 48px
@@ -237,14 +273,34 @@ export function buildTreeLayout(
   const totalAssignedPRs = opts.assignedPRs !== undefined ? opts.assignedPRs : computedAssignedPRs;
   const currentStreak = opts.streak !== undefined ? opts.streak : calculateStreak(weeks);
 
-  const groundY = height - 50; // 370px
-  const trunkX = Math.floor((width - bs) / 2); // 206px
-  const trunkHeightBlocks = 3; // 3 log blocks high (144px)
+  // Determine Growth & Canopy Fullness
+  const rawGrowth = opts.growth ?? "auto";
+  const recent14Weeks = weeks.slice(-14);
+  const activeWeeksCount = recent14Weeks.filter((w) => (w?.total || 0) > 0).length;
+  
+  // Baseline greenness level derived from overall developer activity
+  const baselineLevel =
+    totalCommits >= 300 ? 3 : totalCommits >= 100 ? 2 : totalCommits >= 25 ? 1 : 0;
 
-  const canopyBottomY = groundY - trunkHeightBlocks * bs; // 226px
+  // Leaves are considered full if activity spans consistently across weeks or commit milestones are met
+  const isLeavesFull =
+    rawGrowth === "expanded" ||
+    (rawGrowth === "auto" &&
+      (totalCommits >= 50 || currentStreak >= 14 || (recent14Weeks.length >= 14 && activeWeeksCount >= 10)));
+
+  const growthStage: "standard" | "expanded" = isLeavesFull ? "expanded" : "standard";
+  const isExpanded = growthStage === "expanded";
+
+  // Height and Canopy Slots based on growth stage
+  const trunkHeightBlocks = isExpanded ? 4 : 3; // Gains 1 log height when leaves are full!
+  const canopySlots = isExpanded ? EXPANDED_CANOPY_SLOTS : STANDARD_CANOPY_SLOTS;
+
+  const groundY = height - 55; // Ground surface with ample headroom
+  const trunkX = Math.floor((width - bs) / 2); // Centered trunk
+  const canopyBottomY = groundY - trunkHeightBlocks * bs;
   const trunkStartY = canopyBottomY;
 
-  // 1. Oak Trunk (3 stacked log blocks directly on grass)
+  // 1. Trunk (3 or 4 stacked log blocks directly on grass)
   const trunkBlocks: { x: number; y: number; size: number }[] = [];
   for (let i = 0; i < trunkHeightBlocks; i++) {
     trunkBlocks.push({
@@ -254,15 +310,11 @@ export function buildTreeLayout(
     });
   }
 
-  // 2. Canopy Leaf Blocks (14 blocks with commit-driven green levels)
-  const recentWeeks = weeks.slice(-14);
+  // 2. Canopy Leaf Blocks (14 standard or 21 expanded blocks with commit-driven green levels)
+  const recentWeeks = weeks.slice(-canopySlots.length);
   const avgCommits = totalCommits / Math.max(1, weeks.length);
-  
-  // Baseline greenness level derived from overall developer activity
-  const baselineLevel =
-    totalCommits >= 300 ? 3 : totalCommits >= 100 ? 2 : totalCommits >= 25 ? 1 : 0;
 
-  const leafBlocks: LeafBlockPos[] = CANOPY_SLOTS.map((slot, idx) => {
+  const leafBlocks: LeafBlockPos[] = canopySlots.map((slot, idx) => {
     const x = trunkX + slot.gridX * bs;
     const y = canopyBottomY + slot.gridY * bs;
 
@@ -309,31 +361,39 @@ export function buildTreeLayout(
     }
   }
 
-  // 5. Underground Ore Blocks 💎 (Embedded in dirt layer: 6 slots across width 460)
+  // 5. Underground Ore Blocks 💎 (Embedded in dirt layer: all at groundY + 24 with uniform, balanced spacing)
   const oreBlocks: OreBlockPos[] = [];
+  const leftOreStart = Math.max(24, Math.round(trunkX * 0.18));
+  const leftOreEnd = Math.max(leftOreStart + 60, trunkX - 32);
+  const leftOreSpan = leftOreEnd - leftOreStart;
+
+  const rightOreStart = trunkX + bs + 32;
+  const rightOreEnd = Math.min(width - 24, rightOreStart + leftOreSpan);
+  const rightOreSpan = rightOreEnd - rightOreStart;
   
   if (opts.isOwner === true) {
-    oreBlocks.push({ x: 20, y: groundY + 24, type: "netherite" });
+    oreBlocks.push({ x: leftOreStart, y: groundY + 24, type: "netherite" });
   }
   if (currentStreak >= 7 || totalCommits >= 50) {
-    oreBlocks.push({ x: 76, y: groundY + 24, type: "gold" });
+    oreBlocks.push({ x: Math.round(leftOreStart + 0.50 * leftOreSpan), y: groundY + 24, type: "gold" });
   }
   if (totalCommits >= 25 || totalMergedPRs >= 1) {
-    oreBlocks.push({ x: 132, y: groundY + 24, type: "diamond" });
+    oreBlocks.push({ x: leftOreEnd, y: groundY + 24, type: "diamond" });
   }
   if (totalCommits >= 100 || leafBlocks.some((b) => b.commitLevel === 4)) {
-    oreBlocks.push({ x: 280, y: groundY + 24, type: "emerald" });
+    oreBlocks.push({ x: rightOreStart, y: groundY + 24, type: "emerald" });
   }
   if (opts.isContributor === true) {
-    oreBlocks.push({ x: 336, y: groundY + 24, type: "lapis" });
+    oreBlocks.push({ x: Math.round(rightOreStart + 0.50 * rightOreSpan), y: groundY + 24, type: "lapis" });
   }
   if (totalMergedPRs >= 2 || (totalOpenPRs + totalMergedPRs + totalAssignedPRs) >= 3 || currentStreak >= 14) {
-    oreBlocks.push({ x: 392, y: groundY + 24, type: "redstone" });
+    oreBlocks.push({ x: rightOreEnd, y: groundY + 24, type: "redstone" });
   }
 
-  // 6. Wooden Stat Signpost 🪧 (Placed at x: 62 with comfortable spacing)
+  // 6. Wooden Stat Signpost 🪧 (Placed at the midpoint of the left flank for optimal balance)
+  const signpostX = Math.round(trunkX * 0.42);
   const signpost: SignpostPos | undefined =
-    opts.showSignpost !== false ? { x: 62, y: groundY - 22, streak: currentStreak } : undefined;
+    opts.showSignpost !== false ? { x: signpostX, y: groundY - 22, streak: currentStreak } : undefined;
 
   // 7. Minecraft Beehive 🍯 & Bee 🐝
   let beehive: BeehivePos | undefined;
@@ -346,7 +406,7 @@ export function buildTreeLayout(
     bee = { x: trunkX - 44, y: canopyBottomY + 28 };
   }
 
-  // 8. Minecraft Companion Pet 🐾 (Wolf 🐺, Fox 🦊, Cat 🐱, Parrot 🦜 on Left Side)
+  // 8. Minecraft Companion Pet 🐾 (Wolf 🐺, Fox 🦊, Cat 🐱, Parrot 🦜 on Left Side of trunk)
   let pet: PetPos | undefined;
   const rawPetOpt = opts.pet ?? "auto";
   const isNight = weather.type === "night" || weather.isDay === false;
@@ -377,7 +437,7 @@ export function buildTreeLayout(
             : "sleeping"
           : "sitting";
       pet = {
-        x: 176, // Sits comfortably in Slot L3 next to trunk
+        x: trunkX - 34, // Sits comfortably next to trunk on the left
         y: groundY - (chosenType === "fox" && petState === "sleeping" ? 12 : chosenType === "parrot" ? 16 : 18),
         type: chosenType,
         state: petState,
@@ -397,10 +457,6 @@ export function buildTreeLayout(
     if (rawMoodOpt === "sad" || rawMoodOpt === "dancing" || rawMoodOpt === "watering") {
       mood = rawMoodOpt;
     } else {
-      // Auto mood based on tree health and commits:
-      // If tree is dry / dormant (0 commits or all dormant leaves) -> sad
-      // If tree is flourishing / cherish (>= 30 commits, streak >= 7, or active sprint >= 10) -> dancing
-      // If tree is neutral / steady growth -> watering
       const isDry = totalCommits === 0 || leafBlocks.every((l) => l.commitLevel === 0);
       const isFlourishing = totalCommits >= 30 || currentStreak >= 7 || recent2WeeksCommits >= 10;
 
@@ -414,8 +470,8 @@ export function buildTreeLayout(
     }
 
     farmer = {
-      x: 266, // Stands on right side of trunk (trunk is 206..254)
-      y: groundY - 24, // Feet resting flush on grass surface (370)
+      x: trunkX + bs + 10, // Stands cleanly on right side of trunk
+      y: groundY - 24, // Feet resting flush on grass surface
       mood,
     };
   }
@@ -438,7 +494,7 @@ export function buildTreeLayout(
     }
 
     if (chestType) {
-      const chestX = farmer ? 308 : 274;
+      const chestX = farmer ? trunkX + bs + 48 : trunkX + bs + 24;
       chest = { x: chestX, y: groundY - 16, type: chestType };
     }
   }
@@ -451,7 +507,11 @@ export function buildTreeLayout(
     (showCampfireOpt === "auto" && (recent2WeeksCommits >= 12 || currentStreak >= 10 || totalCommits >= 60));
 
   if (shouldShowCampfire) {
-    const campfireX = farmer && chest ? 372 : farmer || chest ? 346 : 310;
+    const campfireX = (farmer && chest)
+      ? trunkX + bs + 98
+      : (farmer || chest)
+      ? trunkX + bs + 76
+      : trunkX + bs + 44;
     campfire = { x: campfireX, y: groundY - 16 };
   }
 
@@ -477,9 +537,10 @@ export function buildTreeLayout(
   let holidayGifts: HolidayGiftPos[] | undefined;
 
   if (seasonalEvent === "halloween") {
-    jackOLantern = { x: campfire ? 112 : 382, y: groundY - 16 };
+    const jackX = campfire ? Math.max(24, signpost ? signpostX - 42 : trunkX - 180) : trunkX + bs + 144;
+    jackOLantern = { x: jackX, y: groundY - 16 };
   } else if (seasonalEvent === "holiday") {
-    const giftBaseX = chest ? 336 : farmer ? 308 : 274;
+    const giftBaseX = chest ? chest.x + 28 : farmer ? farmer.x + 36 : trunkX + bs + 24;
     holidayGifts = [
       { x: giftBaseX, y: groundY - 12, size: 12, boxColor: "#d32f2f", ribbonColor: "#388e3c" },
       { x: giftBaseX + 13, y: groundY - 10, size: 10, boxColor: "#fbc02d", ribbonColor: "#d32f2f" },
@@ -490,11 +551,11 @@ export function buildTreeLayout(
   const leftObstacles: [number, number][] = [];
   const rightObstacles: [number, number][] = [];
 
-  if (signpost) leftObstacles.push([signpost.x - 12, signpost.x + 52]); // signpost x: 62..108
-  if (pet) leftObstacles.push([pet.x - 14, pet.x + 22]);
-  if (farmer) rightObstacles.push([farmer.x - 18, farmer.x + 22]);
-  if (chest) rightObstacles.push([chest.x - 10, chest.x + 24]);
-  if (campfire) rightObstacles.push([campfire.x - 12, campfire.x + 24]);
+  if (signpost) leftObstacles.push([signpost.x - 14, signpost.x + 50]);
+  if (pet) leftObstacles.push([pet.x - 16, pet.x + 24]);
+  if (farmer) rightObstacles.push([farmer.x - 14, farmer.x + 20]);
+  if (chest) rightObstacles.push([chest.x - 12, chest.x + 22]);
+  if (campfire) rightObstacles.push([campfire.x - 12, campfire.x + 22]);
   if (jackOLantern) {
     if (jackOLantern.x < trunkX) {
       leftObstacles.push([jackOLantern.x - 12, jackOLantern.x + 22]);
@@ -539,8 +600,8 @@ export function buildTreeLayout(
       .filter((s) => s.length >= 18);
   }
 
-  const leftSegments = getFreeSegments(16, trunkX - 8, leftObstacles);
-  const rightSegments = getFreeSegments(trunkX + bs + 6, width - 16, rightObstacles);
+  const leftSegments = getFreeSegments(24, trunkX - 10, leftObstacles);
+  const rightSegments = getFreeSegments(trunkX + bs + 8, width - 24, rightObstacles);
 
   function generateSlotsForSide(
     segments: { start: number; end: number; length: number }[],
@@ -728,6 +789,8 @@ export function buildTreeLayout(
     weather,
     isOwner: opts.isOwner,
     isContributor: opts.isContributor,
+    growthStage,
+    isExpanded,
   };
 }
 
@@ -736,6 +799,7 @@ export type TreeOptions = {
   height?: number;
   weather?: WeatherCondition;
   treeType?: TreeType;
+  growth?: TreeGrowthMode;
   showSignpost?: boolean;
   showBee?: boolean;
   isOwner?: boolean;

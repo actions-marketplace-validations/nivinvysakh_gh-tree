@@ -111,42 +111,58 @@ export function renderFrame(
 
   if (isNight) {
     // Night: Minecraft Moon + Twinkling Stars + Night Clouds
-    const moonX = width - 82;
-    const moonY = 18;
-    const moonSize = 34;
+    const moonX = width - 96;
+    const moonY = 24;
+    const moonSize = 36;
     skySvg += renderMinecraftMoon(moonX, moonY, moonSize, frameIndex, totalFrames);
     skySvg += renderMinecraftStars(width, frameIndex);
 
-    const cloud1X = 18 + Math.sin(driftRatio * Math.PI * 2) * 8;
-    skySvg += renderMinecraftCloud(cloud1X, 32, 1.0, 0.65);
+    const cloud1X = 24 + Math.sin(driftRatio * Math.PI * 2) * 8;
+    skySvg += renderMinecraftCloud(cloud1X, 36, 1.0, 0.65);
+    if (width > 550) {
+      const cloud2X = width - 260 - Math.sin(driftRatio * Math.PI * 2) * 8;
+      skySvg += renderMinecraftCloud(cloud2X, 48, 0.85, 0.55);
+    }
   } else if (isSunny) {
     // Day: Minecraft Sun + Daylight Cloud
-    const sunX = width - 82;
-    const sunY = 18;
-    const sunSize = 34;
+    const sunX = width - 96;
+    const sunY = 24;
+    const sunSize = 36;
     skySvg += renderMinecraftSun(sunX, sunY, sunSize, frameIndex, totalFrames);
 
-    const cloud1X = 18 + Math.sin(driftRatio * Math.PI * 2) * 8;
-    skySvg += renderMinecraftCloud(cloud1X, 32, 1.0, 0.85);
+    const cloud1X = 24 + Math.sin(driftRatio * Math.PI * 2) * 8;
+    skySvg += renderMinecraftCloud(cloud1X, 36, 1.0, 0.85);
+    if (width > 550) {
+      const cloud2X = width - 260 - Math.sin(driftRatio * Math.PI * 2) * 8;
+      skySvg += renderMinecraftCloud(cloud2X, 48, 0.85, 0.75);
+    }
   } else if (isCloudy) {
-    const cloud1X = 14 + Math.sin(driftRatio * Math.PI * 2) * 10;
-    const cloud2X = width - 120 - Math.sin(driftRatio * Math.PI * 2) * 8;
-    const cloud3X = width / 2 - 30 + Math.cos(driftRatio * Math.PI * 2) * 6;
-    skySvg += renderMinecraftCloud(cloud1X, 22, 1.1, 0.9);
-    skySvg += renderMinecraftCloud(cloud2X, 38, 0.9, 0.85);
-    skySvg += renderMinecraftCloud(cloud3X, 15, 0.8, 0.75);
+    const cloud1X = 20 + Math.sin(driftRatio * Math.PI * 2) * 10;
+    const cloud2X = width - 150 - Math.sin(driftRatio * Math.PI * 2) * 8;
+    const cloud3X = 140 + Math.cos(driftRatio * Math.PI * 2) * 6;
+    skySvg += renderMinecraftCloud(cloud1X, 28, 1.1, 0.9);
+    skySvg += renderMinecraftCloud(cloud2X, 42, 0.9, 0.85);
+    skySvg += renderMinecraftCloud(cloud3X, 20, 0.8, 0.75);
   } else if (isRain) {
     // Storm clouds
-    const stormCloud1X = 10 + Math.sin(driftRatio * Math.PI * 2) * 6;
-    const stormCloud2X = width - 130 - Math.sin(driftRatio * Math.PI * 2) * 6;
-    skySvg += renderMinecraftCloud(stormCloud1X, 16, 1.3, 0.95, true);
-    skySvg += renderMinecraftCloud(stormCloud2X, 24, 1.2, 0.95, true);
+    const stormCloud1X = 16 + Math.sin(driftRatio * Math.PI * 2) * 6;
+    const stormCloud2X = width - 160 - Math.sin(driftRatio * Math.PI * 2) * 6;
+    skySvg += renderMinecraftCloud(stormCloud1X, 22, 1.3, 0.95, true);
+    skySvg += renderMinecraftCloud(stormCloud2X, 30, 1.2, 0.95, true);
+    if (width > 550) {
+      const stormCloud3X = 160 + Math.cos(driftRatio * Math.PI * 2) * 6;
+      skySvg += renderMinecraftCloud(stormCloud3X, 18, 1.1, 0.9, true);
+    }
   } else if (isSnow) {
     // Winter overcast clouds
-    const snowCloud1X = 20 + Math.sin(driftRatio * Math.PI * 2) * 6;
-    const snowCloud2X = width - 110 - Math.sin(driftRatio * Math.PI * 2) * 6;
-    skySvg += renderMinecraftCloud(snowCloud1X, 22, 1.1, 0.9);
-    skySvg += renderMinecraftCloud(snowCloud2X, 30, 0.9, 0.85);
+    const snowCloud1X = 24 + Math.sin(driftRatio * Math.PI * 2) * 6;
+    const snowCloud2X = width - 140 - Math.sin(driftRatio * Math.PI * 2) * 6;
+    skySvg += renderMinecraftCloud(snowCloud1X, 26, 1.1, 0.9);
+    skySvg += renderMinecraftCloud(snowCloud2X, 36, 0.9, 0.85);
+    if (width > 550) {
+      const snowCloud3X = 150 + Math.cos(driftRatio * Math.PI * 2) * 6;
+      skySvg += renderMinecraftCloud(snowCloud3X, 20, 0.9, 0.8);
+    }
   }
 
   // Fireworks in Sky (New Year Event)

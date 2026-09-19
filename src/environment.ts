@@ -51,7 +51,7 @@ export function renderMinecraftMoon(
 
 export function renderMinecraftStars(width: number, frameIndex: number): string {
   let stars = "";
-  const starCoords = [
+  const baseStarCoords = [
     { x: 30, y: 35, s: 2, phase: 0 },
     { x: 75, y: 70, s: 1.5, phase: 1 },
     { x: 120, y: 40, s: 2.5, phase: 2 },
@@ -66,6 +66,20 @@ export function renderMinecraftStars(width: number, frameIndex: number): string 
     { x: 315, y: 115, s: 2, phase: 2 },
     { x: 380, y: 130, s: 1.5, phase: 0 },
   ];
+
+  const starCoords = [...baseStarCoords];
+  if (width > 460) {
+    const extraCols = Math.ceil((width - 460) / 60);
+    for (let i = 0; i < extraCols; i++) {
+      const sx = 470 + i * 55 + ((i * 19) % 25);
+      if (sx < width - 20) {
+        starCoords.push(
+          { x: sx, y: 30 + ((i * 23) % 80), s: 2, phase: ((i % 3) as 0 | 1 | 2) },
+          { x: sx + 25, y: 50 + ((i * 37) % 70), s: 1.5, phase: (((i + 1) % 3) as 0 | 1 | 2) }
+        );
+      }
+    }
+  }
 
   for (const star of starCoords) {
     if (star.x < width) {
@@ -90,14 +104,15 @@ export function renderBioluminescentParticles(
   treeType: TreeType
 ): string {
   let rects = "";
-  const count = 14;
+  const count = Math.max(16, Math.round(width / 24));
   const isCrimson = treeType === "crimson";
   const isWarped = treeType === "warped";
   const color1 = isCrimson ? "#ff5252" : isWarped ? "#00e5ff" : "#ffd54f";
   const color2 = isCrimson ? "#ff8a80" : isWarped ? "#80d8ff" : "#fff59d";
 
   for (let i = 0; i < count; i++) {
-    const seedX = (i * 33 + 19) % width;
+    const baseSegment = width / count;
+    const seedX = (i * baseSegment + ((i * 17 + 13) % baseSegment)) % width;
     const rise = ((frameIndex * 3 + i * 11) % (groundY - 50));
     const py = groundY - 15 - rise;
     const sway = Math.sin((frameIndex + i) * 0.45) * 6;
@@ -147,11 +162,12 @@ export function renderRainStreaks(
   _totalFrames: number
 ): string {
   let rects = "";
-  const dropCount = 42;
+  const dropCount = Math.max(42, Math.round(width / 12));
   const speed = 14;
 
   for (let i = 0; i < dropCount; i++) {
-    const seedX = (i * 37 + 13) % width;
+    const baseSegment = width / dropCount;
+    const seedX = (i * baseSegment + ((i * 19 + 7) % baseSegment)) % width;
     const initialY = (i * 23) % (groundY - 10);
     const dropY = (initialY + frameIndex * speed) % (groundY - 5);
     const dropX = (seedX - frameIndex * 2 + width) % width;
@@ -176,11 +192,12 @@ export function renderSnowflakes(
   _totalFrames: number
 ): string {
   let rects = "";
-  const flakeCount = 32;
+  const flakeCount = Math.max(32, Math.round(width / 18));
   const speed = 10;
 
   for (let i = 0; i < flakeCount; i++) {
-    const seedX = (i * 41 + 17) % width;
+    const baseSegment = width / flakeCount;
+    const seedX = (i * baseSegment + ((i * 23 + 11) % baseSegment)) % width;
     const initialY = (i * 29) % (groundY - 20);
     const flakeY = (initialY + frameIndex * speed) % (groundY - 5);
     
@@ -202,10 +219,11 @@ export function renderSakuraPetals(
   _totalFrames: number
 ): string {
   let petals = "";
-  const petalCount = 20;
+  const petalCount = Math.max(20, Math.round(width / 25));
 
   for (let i = 0; i < petalCount; i++) {
-    const seedX = (i * 47 + 23) % width;
+    const baseSegment = width / petalCount;
+    const seedX = (i * baseSegment + ((i * 29 + 17) % baseSegment)) % width;
     const initialY = (i * 31) % (groundY - 30);
     const speedY = 5 + (i % 4);
     const petalY = (initialY + frameIndex * speedY) % (groundY - 8);
@@ -228,9 +246,9 @@ export function renderSeasonalFireworks(
   totalFrames: number = 20
 ): string {
   const bursts = [
-    { cx: 85, cy: 55, color: "#00e5ff", core: "#ffffff", phase: 0 },
-    { cx: 230, cy: 38, color: "#ffd600", core: "#fff9c4", phase: 6 },
-    { cx: 375, cy: 62, color: "#ff4081", core: "#ffffff", phase: 12 },
+    { cx: Math.round(width * 0.2), cy: 55, color: "#00e5ff", core: "#ffffff", phase: 0 },
+    { cx: Math.round(width * 0.5), cy: 38, color: "#ffd600", core: "#fff9c4", phase: 6 },
+    { cx: Math.round(width * 0.8), cy: 62, color: "#ff4081", core: "#ffffff", phase: 12 },
   ];
 
   let res = "";

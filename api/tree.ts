@@ -404,6 +404,11 @@ export default async function handler(req: any, res: any) {
     ? (rawEvent as SeasonalEvent | "auto")
     : "auto";
 
+  const rawGrowth = (query.growth || "auto").toLowerCase().trim();
+  const growth = ["auto", "standard", "expanded"].includes(rawGrowth)
+    ? (rawGrowth as "auto" | "standard" | "expanded")
+    : "auto";
+
   const openPRs = query.openPRs !== undefined ? parseInt(String(query.openPRs), 10) : undefined;
   const mergedPRs = query.mergedPRs !== undefined ? parseInt(String(query.mergedPRs), 10) : undefined;
   const assignedPRs = query.assignedPRs !== undefined ? parseInt(String(query.assignedPRs), 10) : undefined;
@@ -414,6 +419,11 @@ export default async function handler(req: any, res: any) {
   const rawFormat = (query.format || query.ext || "").toLowerCase().trim();
   // Default to animated GIF unless format=svg is explicitly requested
   const isGif = rawFormat !== "svg" && rawFormat !== "static";
+
+  const rawWidth = query.width;
+  const rawHeight = query.height;
+  const width = rawWidth !== undefined ? Math.max(320, Math.min(1200, parseInt(String(rawWidth), 10) || 800)) : 800;
+  const height = rawHeight !== undefined ? Math.max(260, Math.min(800, parseInt(String(rawHeight), 10) || 460)) : 460;
 
   try {
     const contributionData = await fetchUserContributions(username, openPRs, mergedPRs, assignedPRs, prDays);
@@ -433,7 +443,10 @@ export default async function handler(req: any, res: any) {
         : await checkIsRepoContributor(cleanUser);
 
     const treeOpts: TreeOptions = {
+      width,
+      height,
       treeType: theme,
+      growth,
       weather,
       pet,
       showFarmer,

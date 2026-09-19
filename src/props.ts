@@ -144,6 +144,35 @@ export function renderMinecraftGround(
     }
   }
 
+  let dirtFlecksSvg = "";
+  const numDirtCols = Math.max(8, Math.round(width / 50));
+  for (let i = 0; i < numDirtCols; i++) {
+    const colBaseX = i * (width / numDirtCols);
+    const fx1 = Math.round(colBaseX + 12 + ((i * 17) % 15));
+    if (fx1 + 12 < width) {
+      dirtFlecksSvg += `<rect x="${fx1}" y="${groundY + 22 + (i % 3) * 3}" width="${6 + (i % 3) * 3}" height="${4 + (i % 2) * 2}" fill="${i % 2 === 0 ? dirtDark : dirtLight}" />\n`;
+    }
+    const fx2 = Math.round(colBaseX + 25 + ((i * 23) % 18));
+    if (fx2 + 14 < width) {
+      dirtFlecksSvg += `<rect x="${fx2}" y="${groundY + 33 + (i % 2) * 3}" width="${7 + (i % 4) * 2}" height="${5 + (i % 2) * 2}" fill="${i % 2 === 0 ? dirtLight : dirtDark}" />\n`;
+    }
+    if (i % 2 === 0) {
+      const px = Math.round(colBaseX + 35 + ((i * 13) % 12));
+      if (px + 5 < width) {
+        dirtFlecksSvg += `<rect x="${px}" y="${groundY + 26 + (i % 3) * 4}" width="4" height="3" fill="${pebbleColor}" />\n`;
+      }
+    }
+  }
+
+  let grassTuftsSvg = "";
+  const numTuftCols = Math.max(3, Math.round(width / 140));
+  for (let i = 0; i < numTuftCols; i++) {
+    const tx = Math.round(20 + i * (width / numTuftCols) + ((i * 31) % 25));
+    if (tx + 4 < width) {
+      grassTuftsSvg += `<rect x="${tx}" y="${groundY - 3}" width="3" height="3" fill="${grassHighlight}" />\n`;
+    }
+  }
+
   return `
     <!-- Ground Layer (Grass + Dirt + Jagged Fringes + Biome Terrain) -->
     <g shape-rendering="crispEdges">
@@ -154,30 +183,8 @@ export function renderMinecraftGround(
       <!-- Top Dirt Shadow Layer beneath grass -->
       <rect x="0" y="${groundY + grassHeight}" width="${width}" height="6" fill="${dirtDark}" opacity="0.6" />
       
-      <!-- Dirt flecks level 1 -->
-      <rect x="18" y="${groundY + 22}" width="8" height="6" fill="${dirtDark}" />
-      <rect x="74" y="${groundY + 28}" width="10" height="5" fill="${dirtLight}" />
-      <rect x="135" y="${groundY + 20}" width="6" height="8" fill="${dirtDark}" />
-      <rect x="190" y="${groundY + 26}" width="12" height="4" fill="${dirtLight}" />
-      <rect x="250" y="${groundY + 22}" width="7" height="6" fill="${dirtDark}" />
-      <rect x="310" y="${groundY + 25}" width="9" height="7" fill="${dirtLight}" />
-      <rect x="380" y="${groundY + 21}" width="8" height="5" fill="${dirtDark}" />
-      <rect x="425" y="${groundY + 27}" width="10" height="6" fill="${dirtLight}" />
-
-      <!-- Dirt flecks level 2 (deeper) -->
-      <rect x="35" y="${groundY + 34}" width="12" height="5" fill="${dirtLight}" />
-      <rect x="95" y="${groundY + 38}" width="8" height="6" fill="${dirtDark}" />
-      <rect x="160" y="${groundY + 32}" width="10" height="7" fill="${dirtLight}" />
-      <rect x="220" y="${groundY + 36}" width="6" height="5" fill="${dirtDark}" />
-      <rect x="280" y="${groundY + 34}" width="11" height="6" fill="${dirtDark}" />
-      <rect x="345" y="${groundY + 37}" width="8" height="5" fill="${dirtLight}" />
-      <rect x="400" y="${groundY + 33}" width="14" height="6" fill="${dirtDark}" />
-
-      <!-- Pebbles/Stones in soil -->
-      <rect x="52" y="${groundY + 24}" width="4" height="3" fill="${pebbleColor}" />
-      <rect x="175" y="${groundY + 38}" width="5" height="3" fill="${pebbleColor}" />
-      <rect x="295" y="${groundY + 26}" width="4" height="4" fill="${pebbleColor}" />
-      <rect x="365" y="${groundY + 35}" width="5" height="3" fill="${pebbleColor}" />
+      <!-- Dirt Flecks & Stratified Texture across width -->
+      ${dirtFlecksSvg}
 
       <!-- Embedded Ore Blocks -->
       ${oresSvg}
@@ -190,10 +197,8 @@ export function renderMinecraftGround(
       <rect x="0" y="${groundY}" width="${width}" height="3" fill="${grassHighlight}" />
       <rect x="0" y="${groundY + grassHeight - 3}" width="${width}" height="3" fill="${grassShadow}" />
       
-      <!-- Grass Tufts/Blades in open lawn areas -->
-      <rect x="20" y="${groundY - 3}" width="4" height="3" fill="${grassHighlight}" />
-      <rect x="360" y="${groundY - 3}" width="3" height="3" fill="${grassHighlight}" />
-      <rect x="435" y="${groundY - 4}" width="3" height="4" fill="${grassColor}" />
+      <!-- Grass Tufts in open lawn areas -->
+      ${grassTuftsSvg}
     </g>
   `;
 }
@@ -1337,10 +1342,11 @@ export function renderSeasonalHolidayGifts(gifts: HolidayGiftPos[], _frameIndex:
 export function renderSeasonalFairyLights(leafBlocks: LeafBlockPos[], frameIndex: number): string {
   const lightColors = ["#f44336", "#4caf50", "#ffd600", "#00e5ff", "#e91e63", "#ff9800"];
   let res = "";
+  const minGridY = leafBlocks.reduce((min, l) => Math.min(min, l.gridY), 0);
 
   leafBlocks.forEach((leaf, idx) => {
     // Place lights on outer edges of leaves
-    if (leaf.gridY === -3 || leaf.gridX === -2 || leaf.gridX === 2 || leaf.gridY === 0) {
+    if (leaf.gridY === minGridY || Math.abs(leaf.gridX) >= 2 || leaf.gridY === 0) {
       const color = lightColors[(idx + frameIndex) % lightColors.length];
       const isLit = (frameIndex + idx) % 3 !== 0;
       if (isLit) {

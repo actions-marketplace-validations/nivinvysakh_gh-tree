@@ -5,6 +5,7 @@ import { WeatherCondition, WeatherType } from "../../src/weather";
 
 export interface PreviewSettings {
   treeType: TreeType;
+  growth?: "auto" | "standard" | "expanded";
   pet: "none" | "wolf" | "cat" | "fox" | "parrot" | "auto";
   showFarmer: boolean | "auto";
   farmerMood: "auto" | "sad" | "dancing" | "watering";
@@ -58,6 +59,7 @@ export class TreePreviewEngine {
         height: settings.height,
         weather,
         treeType: settings.treeType,
+        growth: settings.growth ?? "auto",
         showSignpost: settings.showSignpost,
         showBee: settings.showBee,
         pet: settings.pet === "none" ? "none" : settings.pet,
