@@ -277,16 +277,21 @@ export function buildTreeLayout(
   const rawGrowth = opts.growth ?? "auto";
   const recent14Weeks = weeks.slice(-14);
   const activeWeeksCount = recent14Weeks.filter((w) => (w?.total || 0) > 0).length;
-  
-  // Baseline greenness level derived from overall developer activity
-  const baselineLevel =
-    totalCommits >= 300 ? 3 : totalCommits >= 100 ? 2 : totalCommits >= 25 ? 1 : 0;
+  const recent14Commits = recent14Weeks.reduce((acc, w) => acc + (w?.total || 0), 0);
 
-  // Leaves are considered full if activity spans consistently across weeks or commit milestones are met
+  const latestWeek = recent14Weeks.length > 0 ? recent14Weeks[recent14Weeks.length - 1] : undefined;
+  const isLatestWeekActive = latestWeek ? ((latestWeek.total || 0) > 0 || currentStreak > 0) : currentStreak > 0;
+
+  // Leaves are considered full only if the canopy leaves are consistently active across recent weeks
+  // AND the user is currently active (no dormant/dead recent week).
+  // If activity drops or recent weeks are inactive, the tree stays at / shrinks back to standard size.
   const isLeavesFull =
     rawGrowth === "expanded" ||
     (rawGrowth === "auto" &&
-      (totalCommits >= 50 || currentStreak >= 14 || (recent14Weeks.length >= 14 && activeWeeksCount >= 10)));
+      isLatestWeekActive &&
+      (currentStreak >= 14 ||
+        (recent14Weeks.length >= 10 && activeWeeksCount >= 10 && recent14Commits >= 30) ||
+        (activeWeeksCount >= 12)));
 
   const growthStage: "standard" | "expanded" = isLeavesFull ? "expanded" : "standard";
   const isExpanded = growthStage === "expanded";

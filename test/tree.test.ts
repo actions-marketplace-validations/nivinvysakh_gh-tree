@@ -388,10 +388,14 @@ describe("Minecraft tree module", () => {
     });
 
     it("grows taller (+1 log trunk) and expands with new canopy leaves (21 blocks) when leaves are full", () => {
-      // 1. Full leaves via high commits (>= 50)
-      const fullCommitsWeeks: ContributionWeek[] = [
-        { days: [{ date: "2026-08-01", count: 60 }], total: 60, openPRs: 0, mergedPRs: 0, assignedPRs: 0 },
-      ];
+      // 1. Full leaves via consistent active weeks (>= 10 active weeks with recent activity)
+      const fullCommitsWeeks: ContributionWeek[] = Array.from({ length: 14 }, (_, i) => ({
+        days: [{ date: `2026-08-${(i + 1).toString().padStart(2, "0")}`, count: 4 }],
+        total: 4,
+        openPRs: 0,
+        mergedPRs: 0,
+        assignedPRs: 0,
+      }));
       const grownLayout = buildTreeLayout(fullCommitsWeeks);
       expect(grownLayout.growthStage).toBe("expanded");
       expect(grownLayout.isExpanded).toBe(true);
@@ -407,13 +411,30 @@ describe("Minecraft tree module", () => {
       expect(grownLayout.leafBlocks.some((l) => l.gridY === -1 && l.gridX === -3)).toBe(true);
       expect(grownLayout.leafBlocks.some((l) => l.gridY === -1 && l.gridX === 3)).toBe(true);
 
-      // 2. Full leaves via streak (>= 14)
+      // 2. Shrinks to standard when recent week has 0 activity / low active weeks
+      const inactiveRecentWeeks: ContributionWeek[] = [
+        ...Array.from({ length: 13 }, (_, i) => ({
+          days: [{ date: `2026-08-${(i + 1).toString().padStart(2, "0")}`, count: 4 }],
+          total: 4,
+          openPRs: 0,
+          mergedPRs: 0,
+          assignedPRs: 0,
+        })),
+        { days: [], total: 0, openPRs: 0, mergedPRs: 0, assignedPRs: 0 }, // Latest week inactive!
+      ];
+      const shrunkLayout = buildTreeLayout(inactiveRecentWeeks, 77, { streak: 0 });
+      expect(shrunkLayout.growthStage).toBe("standard");
+      expect(shrunkLayout.isExpanded).toBe(false);
+      expect(shrunkLayout.trunkBlocks).toHaveLength(3);
+      expect(shrunkLayout.leafBlocks).toHaveLength(14);
+
+      // 3. Full leaves via streak (>= 14)
       const streakLayout = buildTreeLayout([], undefined, { streak: 14 });
       expect(streakLayout.growthStage).toBe("expanded");
       expect(streakLayout.trunkBlocks).toHaveLength(4);
       expect(streakLayout.leafBlocks).toHaveLength(21);
 
-      // 3. Manual override growth: 'expanded' vs 'standard'
+      // 4. Manual override growth: 'expanded' vs 'standard'
       const forcedExpanded = buildTreeLayout(mockWeeks, undefined, { growth: "expanded" });
       expect(forcedExpanded.growthStage).toBe("expanded");
       expect(forcedExpanded.trunkBlocks).toHaveLength(4);
