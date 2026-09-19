@@ -71,7 +71,7 @@ async function run(): Promise<void> {
     const frameCount = parseInt(core.getInput("frames") || "20", 10);
     const frameDelayMs = parseInt(core.getInput("frame-delay-ms") || "100", 10);
     const width = parseInt(core.getInput("width") || "920", 10);
-    const height = parseInt(core.getInput("height") || "460", 10);
+    const height = parseInt(core.getInput("height") || "500", 10);
     const city = core.getInput("city") || "";
     const weatherOverride = core.getInput("weather") || "";
     const rawTreeType = (core.getInput("tree-type") || "oak").toLowerCase().trim();

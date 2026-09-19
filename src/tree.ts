@@ -250,7 +250,7 @@ export function buildTreeLayout(
   } = {}
 ): TreeLayout {
   const width = opts.width ?? 920;
-  const height = opts.height ?? 460;
+  const height = opts.height ?? 500;
   const weather = opts.weather ?? { type: "sunny", description: "Clear sky" };
   const treeType = opts.treeType ?? "oak";
   const bs = BLOCK_SIZE; // 48px

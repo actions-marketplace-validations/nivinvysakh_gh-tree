@@ -56,7 +56,7 @@ export async function rasterizeSvgToRgba(
 export async function encodeBrowserGif(
   svgFrames: string[],
   width: number = 920,
-  height: number = 460,
+  height: number = 500,
   delayMs: number = 200,
   onProgress?: GifProgressCallback
 ): Promise<Blob> {

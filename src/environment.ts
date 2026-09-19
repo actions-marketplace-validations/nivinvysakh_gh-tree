@@ -52,36 +52,25 @@ export function renderMinecraftMoon(
 export function renderMinecraftStars(width: number, frameIndex: number): string {
   let stars = "";
   const baseStarCoords = [
-    { x: 30, y: 35, s: 2, phase: 0 },
-    { x: 75, y: 70, s: 1.5, phase: 1 },
-    { x: 120, y: 40, s: 2.5, phase: 2 },
-    { x: 170, y: 85, s: 1.5, phase: 0 },
-    { x: 230, y: 25, s: 2, phase: 1 },
-    { x: 290, y: 65, s: 1.5, phase: 2 },
-    { x: 340, y: 30, s: 2.5, phase: 0 },
-    { x: 395, y: 75, s: 2, phase: 1 },
-    { x: 430, y: 45, s: 1.5, phase: 2 },
-    { x: 50, y: 110, s: 1.5, phase: 0 },
-    { x: 145, y: 125, s: 2, phase: 1 },
-    { x: 315, y: 115, s: 2, phase: 2 },
-    { x: 380, y: 130, s: 1.5, phase: 0 },
+    // Left sky flank
+    { x: 30, y: 25, s: 2, phase: 0 },
+    { x: 75, y: 55, s: 1.5, phase: 1 },
+    { x: 120, y: 30, s: 2.5, phase: 2 },
+    { x: 165, y: 70, s: 1.5, phase: 0 },
+    { x: 210, y: 25, s: 2, phase: 1 },
+    { x: 260, y: 55, s: 1.5, phase: 2 },
+    { x: 50, y: 95, s: 1.5, phase: 0 },
+    { x: 140, y: 110, s: 2, phase: 1 },
+    // Right sky flank
+    { x: width - 240, y: 35, s: 2, phase: 1 },
+    { x: width - 190, y: 65, s: 1.5, phase: 2 },
+    { x: width - 145, y: 30, s: 2.5, phase: 0 },
+    { x: width - 50, y: 75, s: 1.5, phase: 1 },
+    { x: width - 110, y: 115, s: 2, phase: 2 },
+    { x: width - 220, y: 105, s: 1.5, phase: 0 },
   ];
 
-  const starCoords = [...baseStarCoords];
-  if (width > 460) {
-    const extraCols = Math.ceil((width - 460) / 60);
-    for (let i = 0; i < extraCols; i++) {
-      const sx = 470 + i * 55 + ((i * 19) % 25);
-      if (sx < width - 20) {
-        starCoords.push(
-          { x: sx, y: 30 + ((i * 23) % 80), s: 2, phase: ((i % 3) as 0 | 1 | 2) },
-          { x: sx + 25, y: 50 + ((i * 37) % 70), s: 1.5, phase: (((i + 1) % 3) as 0 | 1 | 2) }
-        );
-      }
-    }
-  }
-
-  for (const star of starCoords) {
+  for (const star of baseStarCoords) {
     if (star.x < width) {
       const twinkle = (frameIndex + star.phase * 2) % 3 === 0;
       const opacity = twinkle ? 0.95 : 0.45;
@@ -110,10 +99,13 @@ export function renderBioluminescentParticles(
   const color1 = isCrimson ? "#ff5252" : isWarped ? "#00e5ff" : "#ffd54f";
   const color2 = isCrimson ? "#ff8a80" : isWarped ? "#80d8ff" : "#fff59d";
 
+  // Constrain rise so particles float gracefully around ground & lower foliage without occluding upper canopy/sky/moon
+  const maxRise = Math.min(180, Math.round((groundY - 50) * 0.45));
+
   for (let i = 0; i < count; i++) {
     const baseSegment = width / count;
     const seedX = (i * baseSegment + ((i * 17 + 13) % baseSegment)) % width;
-    const rise = ((frameIndex * 3 + i * 11) % (groundY - 50));
+    const rise = ((frameIndex * 4 + i * 11) % maxRise);
     const py = groundY - 15 - rise;
     const sway = Math.sin((frameIndex + i) * 0.45) * 6;
     const px = (seedX + sway + width) % width;

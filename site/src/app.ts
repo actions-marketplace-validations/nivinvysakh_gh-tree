@@ -43,7 +43,7 @@ class GhTreeApp {
       isOwner: true,
       isContributor: false,
       width: 920,
-      height: 460,
+      height: 500,
     };
 
     // Initial mock data

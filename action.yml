@@ -103,7 +103,7 @@ inputs:
     default: "920"
   height:
     required: false
-    default: "460"
+    default: "500"
 outputs:
   gif-path:
     description: "Absolute path to the generated GIF"

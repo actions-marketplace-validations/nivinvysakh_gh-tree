@@ -261,7 +261,7 @@ Add this anywhere in your `README.md`:
 
 ```markdown
 <!-- commit-tree-start -->
-![tree](tree.gif?v=1789841444073)
+![tree](tree.gif?v=1789841862532)
 <!-- commit-tree-end -->
 ```
 
@@ -298,7 +298,7 @@ The action will automatically generate `tree.gif`, update your `README.md`, and 
 | `frames`          | `20`         | Number of animation frames in the loop           |
 | `frame-delay-ms`  | `100`        | Frame delay in milliseconds                      |
 | `width`           | `920`        | Canvas width in pixels (full GitHub profile card fit) |
-| `height`          | `460`        | Canvas height in pixels (ample sky headroom)     |
+| `height`          | `500`        | Canvas height in pixels (ample sky headroom)     |
 
 ## Action Outputs
 

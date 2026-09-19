@@ -425,7 +425,7 @@ export default async function handler(req: any, res: any) {
   const rawWidth = query.width;
   const rawHeight = query.height;
   const width = rawWidth !== undefined ? Math.max(320, Math.min(1200, parseInt(String(rawWidth), 10) || 920)) : 920;
-  const height = rawHeight !== undefined ? Math.max(260, Math.min(800, parseInt(String(rawHeight), 10) || 460)) : 460;
+  const height = rawHeight !== undefined ? Math.max(260, Math.min(800, parseInt(String(rawHeight), 10) || 500)) : 500;
 
   try {
     const contributionData = await fetchUserContributions(username, openPRs, mergedPRs, assignedPRs, prDays);
