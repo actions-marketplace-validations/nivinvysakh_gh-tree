@@ -1,6 +1,6 @@
 {
   "name": "gh-tree",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "description": "Renders your GitHub contribution graph as an animated Minecraft Oak Tree (leaves = commits, flowers = open PRs, red apples = merged PRs, golden apples = assigned PRs).",
   "main": "dist/index.js",
   "scripts": {
@@ -8,7 +8,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "generate:mock": "tsx scripts/generate-mock.ts"
+    "generate:mock": "tsx scripts/generate-mock.ts",
+    "site:dev": "vite site",
+    "site:build": "vite build site --outDir ../dist-site",
+    "site:preview": "vite preview site",
+    "api:dev": "tsx scripts/dev-server.ts"
   },
   "license": "MIT",
   "dependencies": {
@@ -18,10 +22,13 @@
     "gifenc": "^1.0.3"
   },
   "devDependencies": {
-    "@types/node": "^20.14.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.1",
     "@vercel/ncc": "^0.38.1",
+    "tailwindcss": "^4.3.3",
     "tsx": "^4.23.13",
     "typescript": "^5.5.4",
-    "vitest": "^4.1.11"
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
   }
 }

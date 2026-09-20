@@ -27,9 +27,69 @@ inputs:
     required: false
     default: "chore: update commit tree [skip ci]"
   days:
-    description: "How many days of history to pull (bucketed into weekly branches)"
+    description: "How many days of history to pull for commit leaves (bucketed into weekly branches)"
     required: false
     default: "140"
+  pr-days:
+    description: "Recency window in days for flowers (open PRs), red apples (merged PRs), and golden apples (reviews/assignments)"
+    required: false
+    default: "14"
+  city:
+    description: "City or location name for live weather (e.g. London, Tokyo, New York, Paris)"
+    required: false
+    default: ""
+  weather:
+    description: "Manual weather override or auto (options: auto, sunny, rain, snow, cloudy, night)"
+    required: false
+    default: "auto"
+  tree-type:
+    description: "Minecraft Tree Biome variety (options: oak, sakura, spruce, birch)"
+    required: false
+    default: "oak"
+  show-signpost:
+    description: "Whether to render the wooden commit streak stat signpost on the grass"
+    required: false
+    default: "true"
+  show-bee:
+    description: "Whether to render the animated Minecraft bee hovering around the tree"
+    required: false
+    default: "true"
+  pet:
+    description: "Minecraft animal companion pet sitting/standing under tree on left side (options: auto, wolf, fox, cat, parrot, none)"
+    required: false
+    default: "auto"
+  show-farmer:
+    description: "Whether to render the human Minecraft farmer under the tree on the right side caring for the tree (options: auto, true, false)"
+    required: false
+    default: "auto"
+  farmer-mood:
+    description: "Manual override for farmer mood (options: auto, sad, dancing, watering). Auto dynamically reflects tree health: sad when dry, dancing when flourishing, watering when growing."
+    required: false
+    default: "auto"
+  show-campfire:
+    description: "Whether to render the roasting campfire during sprint periods (options: auto, true, false)"
+    required: false
+    default: "auto"
+  show-chest:
+    description: "Whether to render the milestone treasure chest (options: auto, true, false)"
+    required: false
+    default: "auto"
+  event:
+    description: "Seasonal holiday event mode (options: auto, halloween, holiday, fireworks, none)"
+    required: false
+    default: "auto"
+  growth:
+    description: "Tree growth and foliage expansion scale (options: auto, standard, expanded). In 'auto', the tree naturally gains height (+1 log trunk) and expands with new canopy leaves when foliage is full."
+    required: false
+    default: "auto"
+  is-owner:
+    description: "Whether the user is the action creator (auto-detected for @nivinvysakh; unlocks Netherite Ore)"
+    required: false
+    default: "auto"
+  is-contributor:
+    description: "Whether the user is a contributor to nivinvysakh/gh-tree (auto-detected via GitHub API; unlocks Lapis Lazuli Ore)"
+    required: false
+    default: "auto"
   frames:
     description: "Number of animation frames in the loop"
     required: false
@@ -40,21 +100,29 @@ inputs:
     default: "100"
   width:
     required: false
-    default: "460"
+    default: "920"
   height:
     required: false
-    default: "420"
+    default: "500"
 outputs:
   gif-path:
     description: "Absolute path to the generated GIF"
   total-commits:
     description: "Total contributions counted in the date range"
+  current-streak:
+    description: "Current consecutive active commit streak in days"
   open-prs:
     description: "Total open pull requests authored by user"
   merged-prs:
     description: "Total merged pull requests"
   assigned-prs:
     description: "Total open pull requests assigned to user"
+  weather-type:
+    description: "Current weather condition type (sunny, rain, snow, cloudy, night)"
+  weather-desc:
+    description: "Text description of current weather"
+  tree-type:
+    description: "Selected Minecraft tree biome type (oak, sakura, spruce, birch)"
 runs:
   using: "node20"
   main: "dist/index.js"

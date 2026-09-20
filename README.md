@@ -3,30 +3,183 @@
 # gh-tree 🌴
 
 
-<!-- commit-tree-start -->
-![tree](tree.gif)
-<!-- commit-tree-end -->
+
+![Demo](/assets/demo-ezgif.com-gif-maker.gif)
+
 
 
 <p>
-  <b>Renders your GitHub contribution graph and pull requests as an animated Minecraft Oak Tree with a transparent background.</b>
+  <b>Renders your GitHub contribution graph and pull requests as an animated Minecraft Oak, Sakura, Spruce, or Birch Tree with transparent background, live weather, and gamer collectibles.</b>
 </p>
 
 </div>
 
 ---
 
-- **Minecraft Oak Leaves** — weekly commits drive the lushness and green intensity levels (Level 0 pale/dormant to Level 4 rich emerald) across the 14 canopy blocks without deforming the tree structure.
-- **Minecraft Flowers 🌸 (Open Authored PRs)** — up to 4 colorful flowers (Poppies, Dandelions, Tulips, Sakura) planted on the grass ground (2 left / 2 right).
+- **Minecraft Tree Biomes 🌸🌲⚪🌳🌴🪵🏜️🌿🔥🌌** — choose between 10 authentic biomes: **Oak**, **Sakura / Cherry Blossom**, **Taiga Spruce**, **Golden Birch**, **Lush Jungle**, **Dark Oak**, **Savanna Acacia**, **Mangrove Swamp**, **Crimson Nether**, or **Warped Nether**.
+- **Minecraft Biome Canopies** — weekly commits drive the lushness and color intensity levels (Level 0 dormant to Level 4 rich emerald/pink/cyan/amber) across the 14 canopy blocks.
+- **Minecraft Pet Companions 🐾 (Wolf 🐺, Fox 🦊, Cat 🐱, Parrot 🦜)** — tamed red-collared **Wolf** (tail-wagging with active streaks $\ge 14\text{d}$), sleeping/waking orange **Fox** (curled up during day, alert at night for streak $\ge 7\text{d}$), cute **Tuxedo Cat**, and dancing **Red Macaw Parrot** (with tri-color wings & head-bobbing dance).
+- **Roasting Campfire 🔥** — crackling campfire with rising smoke particles and flying ember sparks during high-velocity sprint periods.
+- **Milestone Treasure Chests 📦 (Wood, Iron, Gold, Diamond, Ender 🔮)** — treasure chests sitting flush on the lawn leveling up as your total commit milestones grow, culminating in the **Ender Chest** with glowing Eye of Ender and floating portal particles!
+- **Seasonal Holiday Modes 🎃🎄🎆** — auto-detects or manual **Halloween** (glowing Jack-o'-Lantern & flying spooky ghosts), **Holiday Christmas** (twinkling canopy fairy lights & wrapped gifts), and **New Year Fireworks** (colorful sky starbursts).
+- **Wooden & Milestone Stat Signposts 🪧 (Wood, Gold 🪙, Diamond 💎)** — a pixelated signpost displaying your live streak with smart auto-scaling (`14d`, `100d`, `1.2k`), leveling up with glowing ink & royal crowns for Century Club ($\ge 100\text{d}$) and 1-Year ($\ge 365\text{d}$) streaks!
+- **Minecraft Bee 🐝 & Streak Beehive 🍯** — an animated buzzing bee with fluttering wings and a wooden beehive on the trunk celebrating your active commit streak.
+- **Underground Ore Blocks 💎 (Netherite, Gold, Diamond, Emerald, Lapis Lazuli, Redstone)** — embedded in the dirt layer featuring creator-exclusive **Netherite** (`@nivinvysakh`), **Lapis Lazuli** exclusively for verified `nivinvysakh/gh-tree` contributors, and productivity milestone ores.
+- **Minecraft Flowers 🌸 (Open PRs)** — up to 4 colorful flowers (Poppies, Dandelions, Tulips, Sakura) planted on the lawn.
 - **Minecraft Red Apples 🍎 (Merged PRs)** — up to 4 ripe red apples hanging beneath the canopy leaf blocks.
-- **Minecraft Golden Apples 🍏✨ (Assigned PRs)** — up to 4 enchanted golden apples placed side-by-side on the far-left and far-right grass ground.
+- **Minecraft Golden Apples 🍏✨ (Assigned PRs / Reviews)** — up to 4 enchanted golden apples placed on the lawn.
+- **Live Weather & Day/Night Cycle ☀️🌕🌧️❄️☁️** — real-time weather integration (via Open-Meteo) rendering animated Sun, Starry Night Moon & twinkling stars, Rain streaks & splashes, Snowfall & snow caps, or Drifting clouds.
 - **Transparent Background** — pure alpha transparency that seamlessly blends into dark and light GitHub profiles and READMEs.
 
 ---
 
-## Quick Start (Profile README)
+## Biome & Tree Varieties Showcase 🌸🌲⚪🌳🌴🪵🏜️🌿🔥🌌
 
-Add this simple workflow to your repository (e.g. your `username/username` profile README repository) at `.github/workflows/tree.yml`:
+| **Classic Oak 🌳** (`tree-type: oak`) | **Sakura Cherry Blossom 🌸** (`tree-type: sakura`) |
+| :---: | :---: |
+| ![Oak](tree.gif) | ![Sakura](assets/tree-sakura.gif) |
+| *Classic Oak, Wolf Pet, Campfire & Chest* | *Cherry blossom pinks, Cat Pet & falling petals* |
+
+| **Taiga Spruce 🌲** (`tree-type: spruce`) | **Birch Forest ⚪** (`tree-type: birch`) |
+| :---: | :---: |
+| ![Spruce](assets/tree-spruce.gif) | ![Birch](assets/tree-birch.gif) |
+| *Dark coniferous needles, Fox & spruce bark* | *White notched birch bark & Wolf pet* |
+
+| **Lush Jungle 🌴** (`tree-type: jungle`) | **Dark Oak Forest 🪵** (`tree-type: dark_oak`) |
+| :---: | :---: |
+| ![Jungle](assets/tree-jungle.gif) | ![Dark Oak](assets/tree-dark-oak.gif) |
+| *Tropical rainforest emeralds & Parrot pet* | *Deep shadow canopy & Wolf pet* |
+
+| **Savanna Acacia 🏜️** (`tree-type: acacia`) | **Mangrove Swamp 🌿** (`tree-type: mangrove`) |
+| :---: | :---: |
+| ![Acacia](assets/tree-acacia.gif) | ![Mangrove](assets/tree-mangrove.gif) |
+| *Warm sunset amber leaves & Fox pet* | *Bayou olive foliage, swamp roots & Campfire* |
+
+| **Crimson Nether 🔥** (`tree-type: crimson`) | **Warped Nether 🌌** (`tree-type: warped`) |
+| :---: | :---: |
+| ![Crimson](assets/tree-crimson.gif) | ![Warped](assets/tree-warped.gif) |
+| *Nether crimson hyphae & floating red spores* | *Bioluminescent cyan canopy & cyan spores* |
+
+---
+
+## Special Collectibles & Milestone Demos 👨‍🌾🔮🦜
+
+| **Minecraft Farmer Villager 👨‍🌾** (`pet: farmer`) | **Ender Milestone Chest 🔮** (≥ 500 Commits) | **Red Macaw Parrot 🦜** (`pet: parrot`) |
+| :---: | :---: | :---: |
+| ![Farmer](assets/tree-farmer.gif) | ![Ender Chest](assets/tree-ender-chest.gif) | ![Parrot](assets/tree-parrot.gif) |
+| *Default companion with straw hat, robe & wheat* | *Obsidian body, glowing Eye of Ender & portal particles* | *Dancing head-bob & tri-color fluttering wings* |
+
+---
+
+## Seasonal Holiday Events Showcase 🎃🎄🎆
+
+| **Spooky Halloween 🎃** (`event: halloween`) | **Winter Holiday Christmas 🎄** (`event: holiday`) | **New Year Fireworks 🎆** (`event: fireworks`) |
+| :---: | :---: | :---: |
+| ![Halloween](assets/tree-halloween.gif) | ![Holiday](assets/tree-holiday.gif) | ![Fireworks](assets/tree-fireworks.gif) |
+| *Carved Jack-o'-Lantern & Flying Ghosts* | *Twinkling fairy lights, gifts & snow* | *Sky starburst fireworks, Campfire & Fox* |
+
+---
+
+## Live Weather & Day/Night Showcase 🌦️🐾
+
+| **Starry Night 🌕✨** (`weather: night`) | **Rainy 🌧️** (`weather: rain`) |
+| :---: | :---: |
+| ![Night](assets/tree-night.gif) | ![Rain](assets/tree-rain.gif) |
+| *Starry night sky, alert Fox & Moon* | *Slanted rain streaks & splashes* |
+
+| **Snowy ❄️** (`weather: snow`) | **Cloudy ☁️** (`weather: cloudy`) |
+| :---: | :---: |
+| ![Snow](assets/tree-snow.gif) | ![Cloudy](assets/tree-cloudy.gif) |
+| *Fluttering snow & snow-capped leaves* | *Multi-layered drifting overcast clouds & Fox* |
+
+---
+
+## 🎮 Minecraft Collectibles & Game Mechanics
+
+gh-tree turns your GitHub contributions into living Minecraft collectibles and milestones:
+
+### 👨‍🌾 Human Farmer & 🐾 Animal Pet Companions
+
+| Companion / Character | Side / Position | Dynamic Appearance & Behavior | Condition / Override |
+| :--- | :---: | :--- | :--- |
+| **Human Farmer 👨‍🌾**<br>*(Cares for Tree)* | **Right Side**<br>*(Default)* | • 😢 **Sad**: Tree is dry/dormant (0 commits) — slumped posture, drooping hat, tear droplet, withered twig.<br>• 💧 **Watering**: Neutral / steady growth (1–29 commits) — Iron Water Bucket pouring streaming cyan water onto trunk roots with splashes.<br>• 💃 **Dancing**: Flourishing tree (≥ 30 commits or ≥ 7d streak) — joyful hop, rosy cheeks, waving golden wheat, floating sparkles. | **Always enabled by default**<br>(`show-farmer: true/false`, `farmer-mood: auto/sad/watering/dancing`) |
+| **Tamed Wolf 🐺** | Left Side | Sits loyally on the left grass lawn with a red collar and wagging tail. | **Current streak ≥ 14 days** (or `pet: wolf`) |
+| **Sleeping / Alert Fox 🦊** | Left Side | Curls up sleeping during the day; wakes up and stays alert at night. | **Current streak ≥ 7 days** (or `pet: fox`) |
+| **Tuxedo Cat 🐱** | Left Side | Sits peacefully under the tree canopy with glowing emerald eyes. | **Current streak ≥ 3 days** or ≥ 25 commits (or `pet: cat`) |
+| **Red Macaw Parrot 🦜** | Left Side | Dances on the lawn with head-bobbing and fluttering tri-color wings. | **Jungle biome** or `pet: parrot` |
+| **Roasting Campfire 🔥** | Right Side | Crackling campfire with crossed logs, flickering flame tongues, and flying sparks. | **Sprint mode**: ≥ 12 commits in recent 2w, streak ≥ 10d, or ≥ 60 commits (or `show-campfire: true`) |
+| **Milestone Chests 📦** | Right Side | Leveling chests: **Wood** (≥ 15) 🪵 $\rightarrow$ **Iron** (≥ 50) ⚙️ $\rightarrow$ **Gold** (≥ 150) 🪙 $\rightarrow$ **Diamond** (≥ 300) 💎 $\rightarrow$ **Ender Chest** (≥ 500) 🌌 | Total commits in range (or `show-chest: true`) |
+| **Seasonal Events 🎃🎄🎆** | Scene | **Halloween** (Jack-o'-Lantern & Ghosts), **Holiday** (Fairy lights & gift boxes), **New Year** (Fireworks) | Auto-detected by month (Oct, Dec, Jan) or `event: halloween \| holiday \| fireworks` |
+
+---
+
+### 💎 Underground Ore Blocks
+
+Embedded in the underground dirt layer beneath your tree, 6 distinct ore blocks unlock as you hit maintainer, contributor, and productivity milestones:
+
+| Ore Block | Appearance | Unlock Condition | What It Represents |
+| :--- | :---: | :--- | :--- |
+| **Netherite / Ancient Debris** 🪨 | <img src="assets/ore-netherite.svg" width="48" height="40" alt="Netherite Ore" /><br>*(Slot 0: Far-Left)* | **Action Creator Exclusive** (`@nivinvysakh` or `is-owner: true`) | **👑 gh-tree Creator & Maintainer** — Minecraft's rarest material, awarded exclusively to the author of the action! |
+| **Gold Ore** 🪙 | <img src="assets/ore-gold.svg" width="48" height="40" alt="Gold Ore" /><br>*(Slot 1: Mid-Left 1)* | • **Current streak ≥ 7 days**, *OR*<br>• **≥ 50 total commits** | **⚡ Streak Dedication** — milestone for sustained rhythm and week-long consistency. |
+| **Diamond Ore** 💎 | <img src="assets/ore-diamond.svg" width="48" height="40" alt="Diamond Ore" /><br>*(Slot 2: Mid-Left 2)* | • **≥ 25 total commits** in date range, *OR*<br>• **≥ 1 merged PR** | **💎 Active Contributor** — milestone for regular code contributions and PR merges. |
+| **Emerald Ore** ❇️ | <img src="assets/ore-emerald.svg" width="48" height="40" alt="Emerald Ore" /><br>*(Slot 3: Mid-Right 1)* | • **≥ 100 total commits** in date range, *OR*<br>• Any weekly branch reaching **Level 4** (30+ commits/week) | **🏆 Power Contributor** — rare milestone awarded for high commit volume and intense development sprints. |
+| **Lapis Lazuli Ore** 🔷 | <img src="assets/ore-lapis.svg" width="48" height="40" alt="Lapis Lazuli Ore" /><br>*(Slot 4: Mid-Right 2)* | **Contributed to `nivinvysakh/gh-tree`** (verified via GitHub API or `is-contributor: true`) | **🤝 `gh-tree` Contributor Badge** — special celestial blue ore awarded exclusively to developers who have contributed code/PRs to the [nivinvysakh/gh-tree](https://github.com/nivinvysakh/gh-tree) repository! |
+| **Redstone Ore** 🔴 | <img src="assets/ore-redstone.svg" width="48" height="40" alt="Redstone Ore" /><br>*(Slot 5: Far-Right)* | • **Merged PRs ≥ 2**, *OR*<br>• **Total PR activity ≥ 3**, *OR*<br>• **Current streak ≥ 14 days** | **⚙️ Engineering & Automation** — milestone honoring pull request lifecycle, code reviews, and multi-week streaks. |
+
+---
+
+### 🍃 Canopy Leaves & Trees
+- **14 Weekly Canopy Blocks**: 14 distinct branches representing your recent contribution weeks.
+- **Commit Intensity**: Leaf colors dynamically transition across 5 levels from **Level 0** (dormant/dry) up to **Level 4** (lush emerald or vibrant sakura pink) based on weekly commit volume.
+
+### 🌸🍎🍏 Pull Request Collectibles
+- **Flowers 🌸 (Open PRs)**: Up to 4 colorful Minecraft flowers (Poppies, Dandelions, Tulips, Sakura) planted across the grass lawn.
+- **Red Apples 🍎 (Merged PRs)**: Up to 4 ripe red apples hanging beneath the canopy leaf blocks.
+- **Golden Apples 🍏✨ (Assigned PRs / Reviews)**: Up to 4 enchanted golden apples placed on the lawn.
+
+### 🪧 Wooden & Milestone Stat Signposts & 🐝 Beehive
+- **Wooden & Milestone Stat Signposts 🪧**: Renders your active consecutive commit streak using a crisp pixel font and smart auto-scaling (`14d`, `100d`, `365d`, `1.2k`). Features progressive milestone tiers:
+  - 🪵 **Classic Oak Signpost** (`< 100` days): Warm carved wooden board with high-contrast golden star.
+  - 🪙 **Golden Milestone Signpost** ($\ge 100$ days): Golden inlay frame, glowing warm gold ink, and a royal gold crown 👑 for the Century Club!
+  - 💎 **Diamond Milestone Signpost** ($\ge 365$ days): Prismatic diamond teal frame, glowing diamond-cyan ink, and an illuminated diamond crown 👑 for 1+ year streaks!
+- **Beehive 🍯 & Animated Bee 🐝**: A wooden beehive appears on the trunk for active streaks (≥ 3 days) or ≥ 25 commits, while an animated Minecraft bee buzzes around the tree during fair weather.
+
+| **Classic Oak Signpost 🪵** (`< 100` days) | **Century Club Gold Signpost 🪙👑** (`≥ 100` days) | **Diamond 1-Year Signpost 💎👑** (`≥ 365` days) |
+| :---: | :---: | :---: |
+| ![Classic Oak Signpost](assets/tree-streak-14.gif) | ![Golden Signpost](assets/tree-streak-100.gif) | ![Diamond Signpost](assets/tree-streak-365.gif) |
+| *Standard carved wood board & Star* | *Golden frame, glowing gold text & Crown* | *Prismatic teal frame, glowing cyan text & Crown* |
+
+---
+
+## ⚡ Quick Start
+
+Choose the integration method that fits your workflow:
+
+### 🚀 Method 1: Instant 1-Line Embed (Zero Setup - Recommended)
+
+Paste this single line directly into your GitHub Profile `README.md` (**no workflows, YAML files, or tokens needed!**):
+
+```markdown
+[![Minecraft Tree](https://gh-tree.vercel.app/api/tree?user=YOUR_USERNAME&theme=sakura)](https://github.com/nivinvysakh/gh-tree)
+```
+
+**Customize with URL parameters:**
+* `user`: Your GitHub username (`?user=nivinvysakh`)
+* `theme`: `oak` | `sakura` | `spruce` | `birch` | `jungle` | `dark_oak` | `acacia` | `mangrove` | `crimson` | `warped` (default: `oak`)
+* `weather`: `auto` | `sunny` | `rain` | `snow` | `night` | `cloudy`
+* `farmer`: `true` | `false` | `auto` (default: `auto` - stands under tree caring for it)
+* `farmer_mood`: `auto` | `sad` | `dancing` | `watering` (default: `auto` - dynamic tree health reaction)
+* `pet`: `auto` | `wolf` | `fox` | `cat` | `parrot` | `none`
+* `event`: `auto` | `halloween` | `holiday` | `fireworks` | `none`
+* `campfire`: `true` | `false` | `auto`
+
+👉 **Customize live in the [gh-tree Studio](https://gh-tree.vercel.app)**.
+
+---
+
+### ⚙️ Method 2: GitHub Actions Automated Workflow (Daily Updated GIF)
+
+If you prefer self-hosting the animated GIF in your repository, add this workflow at `.github/workflows/tree.yml`:
 
 ```yaml
 name: Generate Commit Tree
@@ -49,6 +202,57 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+### Full Configuration Example
+
+Customize your tree with biomes, pet companions, campfire, milestone chests, seasonal events, and live weather:
+
+```yaml
+name: Generate Commit Tree
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-tree:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: nivinvysakh/gh-tree@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Tree biome variety (10 Minecraft biomes): oak | sakura | spruce | birch | jungle | dark_oak | acacia | mangrove | crimson | warped
+          tree-type: "sakura"
+          # Human farmer under the tree (right side): auto | true | false
+          show-farmer: "auto"
+          # Farmer mood: auto | sad | dancing | watering
+          farmer-mood: "auto"
+          # Animal companion pet (left side): auto | wolf | fox | cat | parrot | none
+          pet: "auto"
+          # Roasting campfire & milestone treasure chest: auto | true | false
+          show-campfire: "auto"
+          show-chest: "auto"
+          # Seasonal holiday event: auto | halloween | holiday | fireworks | none
+          event: "auto"
+          # Live weather from Open-Meteo for your city (auto-detects sun, night, rain, snow, clouds)
+          city: "Tokyo"
+          # Or manually force a weather condition: auto | sunny | night | rain | snow | cloudy
+          weather: "auto"
+          # Recency window in days for flowers (open PRs), red apples (merged PRs), and golden apples
+          pr-days: "14"
+          # Total days of history to fetch for commit canopy leaves (~14 weekly tiers)
+          days: "140"
+          # Whether to show the wooden streak signpost and animated bee
+          show-signpost: "true"
+          show-bee: "true"
+```
+
 > [!NOTE]
 > If you want the tree to reflect contributions across private and external repositories, create a Personal Access Token (PAT) with `read:user` scope, save it in your repo secrets as `TREE_PAT`, and use `${{ secrets.TREE_PAT }}`.
 
@@ -57,7 +261,7 @@ Add this anywhere in your `README.md`:
 
 ```markdown
 <!-- commit-tree-start -->
-![tree](tree.gif)
+![tree](tree.gif?v=1789842706342)
 <!-- commit-tree-end -->
 ```
 
@@ -71,15 +275,30 @@ The action will automatically generate `tree.gif`, update your `README.md`, and 
 |-------------------|--------------|--------------------------------------------------|
 | `github-token`    | *(Required)* | GitHub Token or PAT with `read:user` scope |
 | `github-login`    | `repository_owner`    | GitHub username (defaults to repo owner)   |
+| `tree-type`       | `oak`        | Biome tree type (`oak`, `sakura`, `spruce`, `birch`, `jungle`, `dark_oak`, `acacia`, `mangrove`, `crimson`, `warped`) |
+| `show-farmer`     | `auto`       | Render human Minecraft farmer caring for tree on the right side (`auto`, `true`, `false`) |
+| `farmer-mood`     | `auto`       | Farmer mood override (`auto`, `sad`, `dancing`, `watering`). Auto dynamically responds to tree health: sad when dormant, dancing when flourishing, watering when growing |
+| `pet`             | `auto`       | Minecraft animal companion pet on left side (`auto`, `wolf`, `fox`, `cat`, `parrot`, `none`) |
+| `show-campfire`   | `auto`       | Render roasting campfire during active sprints (`auto`, `true`, `false`) |
+| `show-chest`      | `auto`       | Render milestone treasure chest (`auto`, `true`, `false`) |
+| `event`           | `auto`       | Seasonal holiday event (`auto`, `halloween`, `holiday`, `fireworks`, `none`) |
+| `growth`          | `auto`       | Tree growth & foliage expansion (`auto`, `standard`, `expanded`). In `auto`, tree grows taller (+1 log trunk) and expands with new canopy leaves (14 to 21 leaves) when full |
+| `show-signpost`   | `true`       | Render wooden streak stat signpost on the grass  |
+| `show-bee`        | `true`       | Render animated Minecraft bee around the tree    |
+| `is-owner`        | `auto`       | Unlocks creator-exclusive Netherite Ore (`@nivinvysakh`) |
+| `is-contributor`  | `auto`       | Unlocks Lapis Lazuli Ore (verified for `nivinvysakh/gh-tree` contributors) |
 | `output-path`     | `tree.gif`   | Filepath where the generated GIF is written      |
 | `markdown-path`   | `README.md`  | Markdown file to update (set empty to disable)   |
 | `auto-commit`     | `true`       | Automatically commits & pushes updated files     |
 | `commit-message`  | `chore: update commit tree [skip ci]` | Commit message for auto-commit |
-| `days`            | `140`        | Days of history to fetch (~14–20 weekly branches)|
+| `days`            | `140`        | Days of history to fetch for commit leaves (~14–20 weekly branches)|
+| `pr-days`         | `14`         | Recency timer in days for flowers, red apples, and golden apples |
+| `city`            | `""`         | City for live weather (e.g. `London`, `Tokyo`, `New York`, `Paris`)|
+| `weather`         | `auto`       | Manual weather override (`auto`, `sunny`, `night`, `rain`, `snow`, `cloudy`)|
 | `frames`          | `20`         | Number of animation frames in the loop           |
 | `frame-delay-ms`  | `100`        | Frame delay in milliseconds                      |
-| `width`           | `460`        | Canvas width in pixels                           |
-| `height`          | `420`        | Canvas height in pixels                          |
+| `width`           | `920`        | Canvas width in pixels (full GitHub profile card fit) |
+| `height`          | `500`        | Canvas height in pixels (ample sky headroom)     |
 
 ## Action Outputs
 
@@ -87,15 +306,74 @@ The action will automatically generate `tree.gif`, update your `README.md`, and 
 |-----------------|--------------------------------------------------------|
 | `gif-path`      | Absolute path to the generated GIF                     |
 | `total-commits` | Total commits counted in the date range                |
+| `current-streak`| Current consecutive active commit streak in days       |
 | `open-prs`      | Total open pull requests authored by the user          |
 | `merged-prs`    | Total merged pull requests                             |
 | `assigned-prs`  | Total open pull requests assigned to the user          |
+| `weather-type`  | Detected or active weather type (`sunny`, `night`, `rain`, `snow`, `cloudy`)|
+| `weather-desc`  | Description of current weather                         |
+| `tree-type`     | Selected biome variety (`oak`, `sakura`, `spruce`, `birch`)|
+
+---
+
+## 📁 Project Structure
+
+```
+gh-tree/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                 # Continuous Integration (tests & typecheck)
+│       ├── deploy-pages.yml       # GitHub Pages automated deployment workflow
+│       ├── generate-tree.yml      # Daily profile commit tree generator action
+│       ├── dependabot-pr.yml      # Dependabot PR automation
+│       ├── pr-auto-assign.yml     # PR reviewer and assignee automation
+│       └── wiki-sync.yml          # Documentation auto-synchronizer with GitHub Wiki
+├── assets/                        # Static demo GIFs, ore SVGs, and visual artifacts
+│   ├── ore-*.svg                  # Underground ore block vectors (Netherite, Lapis, Diamond...)
+│   └── tree-*.gif                 # Biome, weather, and streak showcase GIFs
+├── dist/                          # Compiled GitHub Action bundle (ncc distribution)
+├── site/                          # gh-tree Studio Web Application (Vite + Tailwind CSS v4)
+│   ├── index.html                 # Main Studio single-page application
+│   ├── 404.html                   # Minecraft Void 404 error page
+│   ├── favicon.svg                # Emerald glowing palm tree favicon
+│   ├── styles.css                 # Minecraft dark glassmorphism design system
+│   ├── vite.config.ts             # Multi-page Vite configuration
+│   └── src/
+│       ├── app.ts                 # Studio app controller, UI bindings & modal handlers
+│       ├── preview.ts             # Real-time frame looping engine with SVG animation
+│       ├── gif-browser.ts         # Client-side canvas rasterizer and GIF encoder (gifenc)
+│       ├── github-api.ts          # CORS contribution fetcher, streak calculator & PR stats
+│       └── presets.ts             # Curated themes & preset configurations
+├── src/                           # GitHub Action Core Source Code (TypeScript)
+│   ├── main.ts                    # Action entrypoint, CLI input parser & auto-committer
+│   ├── tree.ts                    # Minecraft tree geometry, canopy grid & prop layout builder
+│   ├── svg.ts                     # Pixel art raster-to-SVG frame rendering engine
+│   ├── gif.ts                     # Multi-frame GIF encoder (gifenc + Resvg WASM)
+│   ├── github.ts                  # GraphQL/REST GitHub contribution calendar fetcher
+│   ├── weather.ts                 # Live weather integration (Open-Meteo API)
+│   └── markdown.ts                # Profile README.md tag replacer & updater
+├── test/                          # Comprehensive Unit & Integration Test Suite (Vitest)
+│   ├── tree.test.ts               # Tree layout, biome, and collectibles tests
+│   ├── svg.test.ts                # SVG rendering, typography & milestone chest tests
+│   ├── github.test.ts             # Contribution calendar and streak calculation tests
+│   ├── weather.test.ts            # Weather parser & condition mapping tests
+│   ├── markdown.test.ts           # Markdown file replacement tests
+│   ├── gif.test.ts                # GIF binary encoding tests
+│   └── e2e.test.ts                # Full end-to-end rendering pipeline test
+├── scripts/                       # Developer utility scripts
+│   └── generate-mock.ts           # Offline local mock GIF generator for all biomes
+├── wiki/                          # Documentation knowledge base synced to GitHub Wiki
+├── action.yml                     # GitHub Action definition & input/output schema
+├── package.json                   # Project dependencies and npm scripts
+├── tsconfig.json                  # TypeScript compiler configuration
+└── README.md                      # Repository documentation & visual showcase
+```
 
 ---
 
 ## Local Development & Testing
 
-Generate a local sample GIF without needing a token:
+Generate local sample GIFs for all biomes and weather conditions without needing a token:
 
 ```bash
 npm run generate:mock
@@ -113,12 +391,20 @@ Build action bundle:
 npm run build
 ```
 
+Run web studio locally:
+
+```bash
+npm run site:dev
+```
+
 ## Contributors 👥
 Big thanks to all of the amazing people who have helped by contributing to this project!
 
 <a href="https://github.com/nivinvysakh/gh-tree/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=nivinvysakh/gh-tree" />
 </a>
+
+Interested in contributing? Check out our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) to get started and unlock your **Lapis Lazuli Ore**! 🔷
 
 ---
 

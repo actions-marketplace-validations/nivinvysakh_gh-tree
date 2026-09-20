@@ -1,26 +1,71 @@
 import * as fs from "fs";
 import * as path from "path";
-import { buildTreeLayout } from "../src/tree";
+import { buildTreeLayout, TreeType } from "../src/tree";
 import { renderFrame } from "../src/svg";
 import { encodeGif } from "../src/gif";
 import { updateMarkdownFile } from "../src/markdown";
 import { ContributionWeek } from "../src/github";
+import { WeatherCondition } from "../src/weather";
+
+async function generateGifVariant(
+  filename: string,
+  weather: WeatherCondition,
+  treeType: TreeType,
+  weeks: ContributionWeek[],
+  width: number,
+  height: number,
+  frameCount: number,
+  frameDelayMs: number,
+  customOpts: {
+    pet?: "auto" | "wolf" | "fox" | "cat" | "parrot" | "none";
+    showFarmer?: boolean | "auto";
+    farmerMood?: "auto" | "sad" | "dancing" | "watering";
+    showCampfire?: boolean | "auto";
+    showChest?: boolean | "auto";
+    event?: "auto" | "halloween" | "holiday" | "fireworks" | "none";
+    streak?: number;
+    customWeeks?: ContributionWeek[];
+  } = {}
+): Promise<string> {
+  const activeWeeks = customOpts.customWeeks || weeks;
+  const layout = buildTreeLayout(activeWeeks, undefined, {
+    width,
+    height,
+    weather,
+    treeType,
+    showSignpost: true,
+    showBee: true,
+    isOwner: true,
+    isContributor: true,
+    ...customOpts,
+  });
+  const frames = Array.from({ length: frameCount }, (_, i) => ({
+    svg: renderFrame(layout, i, frameCount),
+  }));
+
+  const gifBytes = await encodeGif(frames, width, height, frameDelayMs);
+  const outputPath = path.resolve(__dirname, `../${filename}`);
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, gifBytes);
+  console.log(`✓ Generated ${filename} [${treeType.toUpperCase()} | ${weather.type.toUpperCase()}] - ${(gifBytes.length / 1024).toFixed(1)} KB`);
+  return outputPath;
+}
 
 async function runMockGeneration(): Promise<void> {
-  console.log("Generating full Minecraft Commit Tree GIF preview showcasing all features...");
+  console.log("Generating local mock GIFs for all biomes, weather conditions, pets, and seasonal events...\n");
 
-  // 14 weeks crafted to showcase all levels: 0 (dormant), 1 (light), 2 (medium), 3 (lush), 4 (emerald)
+  // 14 weeks crafted to showcase all levels, PR flowers, apples, golden apples, and streak
   const commitCounts = [
     3,  // Tier 0 (bottom left outer) - Level 1
     18, // Tier 0 (bottom left inner) - Level 3
     42, // Tier 0 (bottom center) - Level 4
     2,  // Tier 0 (bottom right inner) - Level 1
-    0,  // Tier 0 (bottom right outer) - Level 0 (no commits)
-    0,  // Tier -1 (mid left outer) - Level 0 (no commits)
+    4,  // Tier 0 (bottom right outer)
+    8,  // Tier -1 (mid left outer)
     12, // Tier -1 (mid left inner) - Level 2
     38, // Tier -1 (mid center) - Level 4
-    8,  // Tier -1 (mid right inner) - Level 2
-    0,  // Tier -1 (mid right outer) - Level 0 (no commits)
+    14, // Tier -1 (mid right inner) - Level 2
+    6,  // Tier -1 (mid right outer)
     34, // Tier -2 (upper left) - Level 4
     25, // Tier -2 (upper center) - Level 3
     28, // Tier -2 (upper right) - Level 3
@@ -33,7 +78,10 @@ async function runMockGeneration(): Promise<void> {
     const dateStr = d.toISOString().slice(0, 10);
 
     return {
-      days: [{ date: dateStr, count }],
+      days: [
+        { date: dateStr, count: Math.ceil(count / 2) },
+        { date: new Date(d.getTime() + 86400000).toISOString().slice(0, 10), count: Math.floor(count / 2) },
+      ],
       total: count,
       openPRs: idx === 3 || idx === 10 ? 2 : 0,    // Total 4 flowers (2 left, 2 right)
       mergedPRs: idx === 2 || idx === 8 ? 2 : 0,   // Total 4 red apples in canopy
@@ -41,30 +89,89 @@ async function runMockGeneration(): Promise<void> {
     };
   });
 
-  const width = 460;
-  const height = 420;
-  const frameCount = 12;
-  const frameDelayMs = 120;
+  // 550 total commits weeks for Ender Milestone Chest showcase
+  const enderWeeks: ContributionWeek[] = Array.from({ length: 14 }, (_, idx) => {
+    const count = 40;
+    const d = new Date(now.getTime() - (13 - idx) * 7 * 24 * 60 * 60 * 1000);
+    return {
+      days: [{ date: d.toISOString().slice(0, 10), count }],
+      total: count,
+      openPRs: 0,
+      mergedPRs: idx === 2 || idx === 8 ? 2 : 0,
+      assignedPRs: idx === 1 || idx === 7 ? 2 : 0,
+    };
+  });
 
-  console.log(`Building Minecraft tree layout with commit green levels for ${weeks.length} weeks...`);
-  const layout = buildTreeLayout(weeks, undefined, { width, height });
+  const width = 920;
+  const height = 500;
+  const frameCount = 14;
+  const frameDelayMs = 110;
 
-  console.log(`Rendering ${frameCount} animation frames...`);
-  const frames = Array.from({ length: frameCount }, (_, i) => ({
-    svg: renderFrame(layout, i, frameCount),
-  }));
+  const variants: {
+    file: string;
+    weather: WeatherCondition;
+    treeType: TreeType;
+    opts?: {
+      pet?: "auto" | "wolf" | "fox" | "cat" | "parrot" | "none";
+      showFarmer?: boolean | "auto";
+      farmerMood?: "auto" | "sad" | "dancing" | "watering";
+      showCampfire?: boolean | "auto";
+      showChest?: boolean | "auto";
+      event?: "auto" | "halloween" | "holiday" | "fireworks" | "none";
+      streak?: number;
+      customWeeks?: ContributionWeek[];
+    };
+  }[] = [
+    { file: "tree.gif", weather: { type: "sunny", description: "Sunny / Clear sky" }, treeType: "oak", opts: { pet: "wolf", showFarmer: true, showCampfire: true, showChest: true } },
+    { file: "assets/tree-farmer.gif", weather: { type: "sunny", description: "Default Minecraft Farmer Villager" }, treeType: "oak", opts: { showFarmer: true, farmerMood: "watering", showCampfire: false } },
+    { file: "assets/tree-sakura.gif", weather: { type: "sunny", description: "Sunny Sakura Blossom" }, treeType: "sakura", opts: { pet: "cat", showChest: true } },
+    { file: "assets/tree-sakura-rain.gif", weather: { type: "rain", description: "Sakura in Rain" }, treeType: "sakura" },
+    { file: "assets/tree-sakura-snow.gif", weather: { type: "snow", description: "Sakura in Snow" }, treeType: "sakura" },
+    { file: "assets/tree-spruce.gif", weather: { type: "sunny", description: "Taiga Spruce" }, treeType: "spruce", opts: { pet: "fox", showCampfire: true } },
+    { file: "assets/tree-spruce-snow.gif", weather: { type: "snow", description: "Taiga Spruce in Snow" }, treeType: "spruce" },
+    { file: "assets/tree-birch.gif", weather: { type: "sunny", description: "Birch Forest" }, treeType: "birch", opts: { pet: "wolf" } },
+    { file: "assets/tree-birch-rain.gif", weather: { type: "rain", description: "Birch in Rain" }, treeType: "birch" },
+    { file: "assets/tree-night.gif", weather: { type: "night", description: "Clear starry night (Moon & Clouds)", isDay: false }, treeType: "oak", opts: { pet: "fox", showCampfire: true } },
+    { file: "assets/tree-rain.gif", weather: { type: "rain", description: "Rain showers & storm clouds" }, treeType: "oak" },
+    { file: "assets/tree-snow.gif", weather: { type: "snow", description: "Snowfall & snowy caps" }, treeType: "spruce" },
+    { file: "assets/tree-cloudy.gif", weather: { type: "cloudy", description: "Overcast clouds" }, treeType: "oak", opts: { pet: "fox" } },
+    { file: "assets/tree-halloween.gif", weather: { type: "night", description: "Spooky Halloween Night", isDay: false }, treeType: "oak", opts: { event: "halloween", pet: "cat" } },
+    { file: "assets/tree-holiday.gif", weather: { type: "snow", description: "Winter Holiday Christmas", isDay: true }, treeType: "spruce", opts: { event: "holiday", pet: "wolf", showChest: true } },
+    { file: "assets/tree-fireworks.gif", weather: { type: "night", description: "New Year Fireworks Celebration", isDay: false }, treeType: "oak", opts: { event: "fireworks", pet: "fox", showCampfire: true } },
+    { file: "assets/tree-jungle.gif", weather: { type: "sunny", description: "Lush Jungle Rainforest" }, treeType: "jungle", opts: { pet: "parrot", showChest: true } },
+    { file: "assets/tree-jungle-rain.gif", weather: { type: "rain", description: "Jungle Tropical Rain" }, treeType: "jungle" },
+    { file: "assets/tree-dark-oak.gif", weather: { type: "sunny", description: "Dark Oak Forest" }, treeType: "dark_oak", opts: { pet: "wolf" } },
+    { file: "assets/tree-acacia.gif", weather: { type: "sunny", description: "Savanna Acacia" }, treeType: "acacia", opts: { pet: "fox", showCampfire: true } },
+    { file: "assets/tree-mangrove.gif", weather: { type: "sunny", description: "Mangrove Bayou Swamp" }, treeType: "mangrove", opts: { pet: "cat", showCampfire: true } },
+    { file: "assets/tree-crimson.gif", weather: { type: "night", description: "Crimson Nether Forest", isDay: false }, treeType: "crimson", opts: { pet: "fox", showCampfire: true, showChest: true } },
+    { file: "assets/tree-warped.gif", weather: { type: "night", description: "Warped Nether Aurora", isDay: false }, treeType: "warped", opts: { pet: "cat", showChest: true } },
+    { file: "assets/tree-parrot.gif", weather: { type: "sunny", description: "Red Macaw Parrot Companion" }, treeType: "jungle", opts: { pet: "parrot" } },
+    { file: "assets/tree-ender-chest.gif", weather: { type: "night", description: "Ender Milestone Chest (500+ Commits)", isDay: false }, treeType: "warped", opts: { showChest: true, customWeeks: enderWeeks, pet: "cat" } },
+    { file: "assets/tree-streak-14.gif", weather: { type: "sunny", description: "Standard Streak (<100 Days)" }, treeType: "oak", opts: { streak: 14, pet: "wolf" } },
+    { file: "assets/tree-streak-100.gif", weather: { type: "sunny", description: "100+ Day Golden Milestone Streak" }, treeType: "oak", opts: { streak: 100, pet: "wolf", showCampfire: true, showChest: true } },
+    { file: "assets/tree-streak-365.gif", weather: { type: "night", description: "365+ Day Diamond Milestone Streak", isDay: false }, treeType: "sakura", opts: { streak: 365, pet: "fox", showCampfire: true, showChest: true } },
+  ];
 
-  console.log("Encoding transparent GIF...");
-  const gifBytes = await encodeGif(frames, width, height, frameDelayMs);
+  for (const variant of variants) {
+    const outputPath = await generateGifVariant(
+      variant.file,
+      variant.weather,
+      variant.treeType,
+      weeks,
+      width,
+      height,
+      frameCount,
+      frameDelayMs,
+      variant.opts || {}
+    );
 
-  const outputPath = path.resolve(__dirname, "../tree.gif");
-  fs.writeFileSync(outputPath, gifBytes);
-  console.log(`✓ Generated ${outputPath} (${(gifBytes.length / 1024).toFixed(1)} KB)`);
+    if (variant.file === "tree.gif") {
+      const readmePath = path.resolve(__dirname, "../README.md");
+      updateMarkdownFile(readmePath, outputPath, "tree");
+    }
+  }
 
-  const readmePath = path.resolve(__dirname, "../README.md");
-  updateMarkdownFile(readmePath, outputPath, "tree");
-  console.log(`✓ Updated ${readmePath} with ![tree](tree.gif)`);
-  console.log("Done! Open tree.gif to view your full Minecraft Commit Tree preview.");
+  console.log("\nAll mock GIFs generated successfully!");
 }
 
 runMockGeneration();

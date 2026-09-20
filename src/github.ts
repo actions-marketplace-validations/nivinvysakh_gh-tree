@@ -16,6 +16,7 @@ export interface ContributionData {
   totalOpenPRs: number;
   totalMergedPRs: number;
   totalAssignedPRs: number;
+  currentStreak: number;
   weeks: ContributionWeek[];
 }
 
@@ -98,16 +99,20 @@ const QUERY = `
 `;
 
 /**
- * Fetches the authenticated user's contribution calendar, authored PRs,
- * merged PRs, PR reviews, and assigned PRs within the date window using GitHub's GraphQL API.
+ * Fetches the authenticated user's contribution calendar (over `days`), and
+ * authored PRs, merged PRs, PR reviews, and assigned PRs within the recency window (`prDays`).
  */
 export async function fetchContributions(
   token: string,
   login: string,
-  days: number
+  days: number,
+  prDays: number = 14
 ): Promise<ContributionData> {
   const to = new Date();
   const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
+  const prFrom = new Date(to.getTime() - prDays * 24 * 60 * 60 * 1000);
+  const prStartDate = prFrom.toISOString().slice(0, 10);
+
   const assignedQuery = `is:pr is:open assignee:${login}`;
   const reviewQuery = `is:pr reviewed-by:${login}`;
 
@@ -162,7 +167,7 @@ export async function fetchContributions(
     };
   });
 
-  // Collect and deduplicate PR events strictly within the date window
+  // Collect and deduplicate PR events strictly within the recency window (prDays)
   const countedOpenPRs = new Set<string>();
   const countedMergedPRs = new Set<string>();
   const countedAssignedPRs = new Set<string>();
@@ -177,14 +182,14 @@ export async function fetchContributions(
     if (pr.merged || pr.state === "MERGED") {
       if (!countedMergedPRs.has(prKey)) {
         const dateStr = (pr.mergedAt || item.occurredAt || pr.createdAt || "").slice(0, 10);
-        if (assignPRToWeek(weeks, dateStr, "merged")) {
+        if (assignPRToWeek(weeks, dateStr, "merged", prStartDate)) {
           countedMergedPRs.add(prKey);
         }
       }
     } else if (pr.state === "OPEN") {
       if (!countedOpenPRs.has(prKey)) {
         const dateStr = (item.occurredAt || pr.createdAt || "").slice(0, 10);
-        if (assignPRToWeek(weeks, dateStr, "open")) {
+        if (assignPRToWeek(weeks, dateStr, "open", prStartDate)) {
           countedOpenPRs.add(prKey);
         }
       }
@@ -199,7 +204,7 @@ export async function fetchContributions(
     const prKey = `review-${pr.id || pr.url || item.occurredAt}`;
     if (!countedAssignedPRs.has(prKey)) {
       const dateStr = (item.occurredAt || pr.createdAt || "").slice(0, 10);
-      if (assignPRToWeek(weeks, dateStr, "assigned")) {
+      if (assignPRToWeek(weeks, dateStr, "assigned", prStartDate)) {
         countedAssignedPRs.add(prKey);
       }
     }
@@ -211,7 +216,7 @@ export async function fetchContributions(
     const prKey = pr.id || pr.url || pr.createdAt;
     if (!countedOpenPRs.has(prKey)) {
       const dateStr = (pr.createdAt || "").slice(0, 10);
-      if (assignPRToWeek(weeks, dateStr, "open")) {
+      if (assignPRToWeek(weeks, dateStr, "open", prStartDate)) {
         countedOpenPRs.add(prKey);
       }
     }
@@ -223,7 +228,7 @@ export async function fetchContributions(
     const prKey = pr.id || pr.url || pr.mergedAt || pr.createdAt;
     if (!countedMergedPRs.has(prKey)) {
       const dateStr = (pr.mergedAt || pr.createdAt || "").slice(0, 10);
-      if (assignPRToWeek(weeks, dateStr, "merged")) {
+      if (assignPRToWeek(weeks, dateStr, "merged", prStartDate)) {
         countedMergedPRs.add(prKey);
       }
     }
@@ -236,7 +241,7 @@ export async function fetchContributions(
     const prKey = pr.id || pr.url || pr.createdAt;
     if (!countedAssignedPRs.has(prKey)) {
       const dateStr = (pr.createdAt || "").slice(0, 10);
-      if (assignPRToWeek(weeks, dateStr, "assigned")) {
+      if (assignPRToWeek(weeks, dateStr, "assigned", prStartDate)) {
         countedAssignedPRs.add(prKey);
       }
     }
@@ -249,34 +254,71 @@ export async function fetchContributions(
     const prKey = `rev-search-${pr.id || pr.url || pr.createdAt}`;
     if (!countedAssignedPRs.has(prKey)) {
       const dateStr = (pr.createdAt || "").slice(0, 10);
-      if (assignPRToWeek(weeks, dateStr, "assigned")) {
+      if (assignPRToWeek(weeks, dateStr, "assigned", prStartDate)) {
         countedAssignedPRs.add(prKey);
       }
     }
   }
+
+  const currentStreak = calculateStreak(weeks);
 
   return {
     totalCommits: calendar.totalContributions || 0,
     totalOpenPRs: countedOpenPRs.size,
     totalMergedPRs: countedMergedPRs.size,
     totalAssignedPRs: countedAssignedPRs.size,
+    currentStreak,
     weeks,
   };
+}
+
+/**
+ * Computes the consecutive active contribution day streak from weekly contribution data.
+ * Checks up to today/yesterday so ongoing days don't prematurely break active streaks.
+ */
+export function calculateStreak(weeks: ContributionWeek[]): number {
+  const allDays: ContributionDay[] = [];
+  for (const w of weeks) {
+    for (const d of w.days) {
+      allDays.push(d);
+    }
+  }
+
+  if (allDays.length === 0) return 0;
+
+  // Sort ascending by date
+  allDays.sort((a, b) => a.date.localeCompare(b.date));
+
+  let streak = 0;
+  let idx = allDays.length - 1;
+
+  // If the last day (today) has 0 contributions, check if yesterday had contributions
+  if (allDays[idx].count === 0) {
+    idx--;
+  }
+
+  while (idx >= 0 && allDays[idx].count > 0) {
+    streak++;
+    idx--;
+  }
+
+  return streak;
 }
 
 function assignPRToWeek(
   weeks: ContributionWeek[],
   dateStr: string,
-  type: "open" | "merged" | "assigned"
+  type: "open" | "merged" | "assigned",
+  minDateStr?: string
 ): boolean {
   if (weeks.length === 0 || !dateStr) return false;
 
   const firstWeek = weeks[0];
   const lastWeek = weeks[weeks.length - 1];
-  const windowStart = firstWeek.days[0]?.date || "";
+  const windowStart = minDateStr || firstWeek.days[0]?.date || "";
   const windowEnd = lastWeek.days[lastWeek.days.length - 1]?.date || "";
 
-  // Strictly enforce that the PR must have occurred within the weeks window
+  // Strictly enforce that the PR must have occurred within the recency window
   if (windowStart && dateStr < windowStart) {
     return false;
   }
@@ -303,4 +345,39 @@ function assignPRToWeek(
   }
 
   return false;
+}
+
+/**
+ * Fetches the list of contributor logins for a repository (e.g. "owner/repo").
+ * Returns an array of lowercase usernames.
+ */
+export async function fetchRepoContributors(
+  token: string,
+  repository: string
+): Promise<string[]> {
+  if (!repository || !repository.includes("/")) {
+    return [];
+  }
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repository}/contributors?per_page=100`, {
+      headers: {
+        Authorization: `bearer ${token}`,
+        "User-Agent": "commit-tree-action",
+        Accept: "application/vnd.github+json",
+      },
+    });
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const data = (await res.json()) as any;
+    if (Array.isArray(data)) {
+      return data.map((c: any) => (c.login || "").toLowerCase()).filter(Boolean);
+    }
+    return [];
+  } catch {
+    return [];
+  }
 }

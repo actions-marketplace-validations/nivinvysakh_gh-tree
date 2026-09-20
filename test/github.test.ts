@@ -1,14 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchContributions } from "../src/github";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { calculateStreak, fetchContributions, fetchRepoContributors } from "../src/github";
 
 describe("github module", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-01T12:00:00Z"));
     vi.restoreAllMocks();
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     global.fetch = originalFetch;
   });
 
@@ -123,12 +126,11 @@ describe("github module", () => {
       json: async () => mockGraphQLResponse,
     });
 
-    const result = await fetchContributions("fake_token", "testuser", 30);
+    const result = await fetchContributions("fake_token", "testuser", 30, 30);
 
     expect(result.totalCommits).toBe(42);
     expect(result.totalOpenPRs).toBe(1);
     expect(result.totalMergedPRs).toBe(1);
-    // 1 assigned PR + 1 review contribution = 2 golden apples
     expect(result.totalAssignedPRs).toBe(2);
     expect(result.weeks).toHaveLength(2);
 
@@ -140,6 +142,65 @@ describe("github module", () => {
     expect(result.weeks[1].total).toBe(5);
     expect(result.weeks[1].openPRs).toBe(0);
     expect(result.weeks[1].mergedPRs).toBe(1);
+  });
+
+  it("filters PRs with prDays recency timer window while preserving commit history", async () => {
+    const mockGraphQLResponse = {
+      data: {
+        user: {
+          contributionsCollection: {
+            contributionCalendar: {
+              totalContributions: 100,
+              weeks: [
+                {
+                  contributionDays: [
+                    { date: "2026-08-01", contributionCount: 10 },
+                  ],
+                },
+                {
+                  contributionDays: [
+                    { date: "2026-08-30", contributionCount: 10 },
+                  ],
+                },
+              ],
+            },
+            pullRequestContributions: { nodes: [] },
+            pullRequestReviewContributions: { nodes: [] },
+          },
+          openPRs: {
+            totalCount: 2,
+            nodes: [
+              // Older PR from 30 days ago
+              {
+                id: "pr_old_open",
+                url: "https://github.com/test/repo/pull/1",
+                createdAt: "2026-08-01T09:00:00Z",
+              },
+              // Recent PR from 2 days ago
+              {
+                id: "pr_recent_open",
+                url: "https://github.com/test/repo/pull/2",
+                createdAt: "2026-08-30T09:00:00Z",
+              },
+            ],
+          },
+          mergedPRs: { totalCount: 0, nodes: [] },
+        },
+        assignedPRs: { issueCount: 0, nodes: [] },
+        reviewedPRs: { issueCount: 0, nodes: [] },
+      },
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockGraphQLResponse,
+    });
+
+    // days = 40 (keeps all 100 commits), but prDays = 5 (only keeps PR from 2026-08-30)
+    const result = await fetchContributions("fake_token", "testuser", 40, 5);
+
+    expect(result.totalCommits).toBe(100);
+    expect(result.totalOpenPRs).toBe(1); // Only the recent PR
   });
 
   it("throws on HTTP errors", async () => {
@@ -165,5 +226,148 @@ describe("github module", () => {
     await expect(fetchContributions("fake_token", "testuser", 30)).rejects.toThrow(
       "GitHub GraphQL errors"
     );
+  });
+
+  describe("calculateStreak", () => {
+    it("calculates active consecutive contribution streak correctly", () => {
+      const weeks = [
+        {
+          days: [
+            { date: "2026-08-20", count: 0 },
+            { date: "2026-08-21", count: 2 },
+            { date: "2026-08-22", count: 4 },
+          ],
+          total: 6,
+          openPRs: 0,
+          mergedPRs: 0,
+          assignedPRs: 0,
+        },
+        {
+          days: [
+            { date: "2026-08-23", count: 1 },
+            { date: "2026-08-24", count: 3 },
+            { date: "2026-08-25", count: 0 }, // Today with 0 commits yet, but yesterday had 3
+          ],
+          total: 4,
+          openPRs: 0,
+          mergedPRs: 0,
+          assignedPRs: 0,
+        },
+      ];
+
+      // Streak from Aug 21, 22, 23, 24 = 4 days
+      expect(calculateStreak(weeks)).toBe(4);
+    });
+
+    it("returns 0 if no active streak exists", () => {
+      const weeks = [
+        {
+          days: [
+            { date: "2026-08-20", count: 2 },
+            { date: "2026-08-21", count: 0 },
+            { date: "2026-08-22", count: 0 },
+          ],
+          total: 2,
+          openPRs: 0,
+          mergedPRs: 0,
+          assignedPRs: 0,
+        },
+      ];
+
+      expect(calculateStreak(weeks)).toBe(0);
+    });
+  });
+
+  describe("fetchRepoContributors", () => {
+    it("fetches and parses list of repository contributors correctly", async () => {
+      const mockContributors = [
+        { login: "NivinVysakh", id: 1, contributions: 50 },
+        { login: "AliceDev", id: 2, contributions: 12 },
+        { login: "BobCoder", id: 3, contributions: 5 },
+      ];
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockContributors,
+      });
+
+      const contributors = await fetchRepoContributors("fake_token", "nivinvysakh/gh-tree");
+      expect(contributors).toEqual(["nivinvysakh", "alicedev", "bobcoder"]);
+    });
+
+    it("returns empty array on API failure or invalid repo format", async () => {
+      const empty1 = await fetchRepoContributors("fake_token", "");
+      expect(empty1).toEqual([]);
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      const empty2 = await fetchRepoContributors("fake_token", "invalid/repo");
+      expect(empty2).toEqual([]);
+    });
+  });
+
+  describe("site fetchGitHubProfile", () => {
+    it("throws NOT_FOUND error when GitHub user does not exist (HTTP 404)", async () => {
+      const { fetchGitHubProfile } = await import("../site/src/github-api.js");
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      });
+
+      await expect(fetchGitHubProfile("nonexistentuser12345")).rejects.toThrow('User "@nonexistentuser12345" not found on GitHub.');
+    });
+
+    it("throws EMPTY_USERNAME error when given empty string", async () => {
+      const { fetchGitHubProfile } = await import("../site/src/github-api.js");
+      await expect(fetchGitHubProfile("  ")).rejects.toThrow("Please enter a valid GitHub username.");
+    });
+
+    it("returns profile object when user exists", async () => {
+      const { fetchGitHubProfile } = await import("../site/src/github-api.js");
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          login: "nivinvysakh",
+          name: "Nivin Vysakh",
+          avatar_url: "https://avatars.githubusercontent.com/u/123?v=4",
+          bio: "Open Source Creator",
+          public_repos: 20,
+          followers: 100,
+        }),
+      });
+
+      const profile = await fetchGitHubProfile("nivinvysakh");
+      expect(profile.login).toBe("nivinvysakh");
+      expect(profile.name).toBe("Nivin Vysakh");
+      expect(profile.avatarUrl).toBe("https://avatars.githubusercontent.com/u/123?v=4");
+    });
+
+    it("throws RATE_LIMITED error with parsed reset time when rate-limited (HTTP 403)", async () => {
+      const { fetchGitHubProfile } = await import("../site/src/github-api.js");
+      const futureEpoch = Math.floor(Date.now() / 1000) + 600; // 10 minutes in future
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        headers: new Headers({
+          "x-ratelimit-reset": String(futureEpoch),
+        }),
+      });
+
+      await expect(fetchGitHubProfile("anyuser")).rejects.toThrow(/rate limit reached/);
+    });
+  });
+
+  describe("site sanitizeFilename", () => {
+    it("sanitizes unsafe characters and enforces extension", async () => {
+      const { sanitizeFilename } = await import("../site/src/gif-browser.js");
+      expect(sanitizeFilename("user/with:invalid*chars?", "gif")).toBe("user-with-invalid-chars.gif");
+      expect(sanitizeFilename("already-safe.gif", "gif")).toBe("already-safe.gif");
+      expect(sanitizeFilename("   spaced name   ", "svg")).toBe("spaced-name.svg");
+      expect(sanitizeFilename("", "gif")).toBe("minecraft-tree.gif");
+    });
   });
 });
